@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { feeds, entries, type feeds as FeedsTable } from "../db/schema.js";
 import { parseRssFeed } from "./rssParser.js";
@@ -111,6 +111,19 @@ async function fetchChangelogFeed(feed: Feed): Promise<void> {
     });
 
   if (rows.length > 0) {
-    await db.insert(entries).values(rows).onConflictDoNothing();
+    await db
+      .insert(entries)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [entries.feedId, entries.guid],
+        set: {
+          url: sql`excluded.url`,
+          contentText: sql`excluded.content_text`,
+          author: sql`excluded.author`,
+          version: sql`excluded.version`,
+          rawChangelog: sql`excluded.raw_changelog`,
+          diffHtml: sql`excluded.diff_html`,
+        },
+      });
   }
 }

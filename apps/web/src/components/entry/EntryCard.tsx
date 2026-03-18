@@ -24,14 +24,18 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <a
-                href={entry.url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-ink group-hover:text-accent transition-colors"
-              >
-                {entry.title ?? "Untitled"}
-              </a>
+              {entry.url ? (
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-ink group-hover:text-accent transition-colors"
+                >
+                  {entry.title ?? "Untitled"}
+                </a>
+              ) : (
+                <span className="font-medium text-ink">{entry.title ?? "Untitled"}</span>
+              )}
               <div className="flex items-center gap-1.5 ml-auto text-xs text-ink-muted">
                 {feedTitle && <span>{feedTitle}</span>}
                 {feedTitle && entry.author && (

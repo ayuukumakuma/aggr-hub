@@ -137,7 +137,7 @@ export async function parseChangelogMd(
   const now = Date.now();
   const sections: ChangelogItem[] = rawSections.map((s, i) => ({
     title: s.version,
-    url: undefined,
+    url: url,
     contentText: s.content.join("\n").trim(),
     author: undefined,
     publishedAt: s.date ? new Date(s.date) : new Date(now - i * 1000),
