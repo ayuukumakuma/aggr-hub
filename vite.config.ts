@@ -1,0 +1,46 @@
+import { defineConfig } from "vite-plus";
+
+export default defineConfig({
+  staged: {
+    "*": "vp check --fix",
+  },
+  lint: { options: { typeAware: true, typeCheck: true } },
+  run: {
+    tasks: {
+      // === 開発用 ===
+      "dev:db_up": {
+        command: "docker compose up -d postgres",
+        cache: false,
+      },
+      "dev:db_down": {
+        command: "docker compose down postgres",
+        cache: false,
+      },
+      "dev:db_restart": {
+        command: "vp run dev:db_down && vp run dev:db_up",
+        cache: false,
+      },
+      "dev:all": {
+        command: "docker compose up -d postgres && vp run server#dev & vp run web#dev",
+        cache: false,
+      },
+      // === 本番用（全サービス） ===
+      "prod:build": {
+        command: "docker compose build --no-cache",
+        cache: false,
+      },
+      "prod:up": {
+        command: "docker compose up -d",
+        cache: false,
+      },
+      "prod:down": {
+        command: "docker compose down",
+        cache: false,
+      },
+      "prod:restart": {
+        command: "vp run prod:down && vp run prod:up",
+        cache: false,
+      },
+    },
+  },
+});
