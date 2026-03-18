@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import { Rss, GitBranch, RefreshCw, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import type { Feed } from "../../lib/api.js";
 import { useDeleteFeed, useRefreshFeed } from "../../hooks/useFeeds.js";
+import { FeedTypeIcon, FeedTypeBadge } from "./FeedTypeBadge.js";
 import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 
@@ -13,8 +14,6 @@ export function FeedCard({ feed }: FeedCardProps) {
   const deleteFeed = useDeleteFeed();
   const refreshFeed = useRefreshFeed();
 
-  const isChangelog = feed.feedType === "changelog";
-
   return (
     <div className="group bg-surface-1 rounded-lg p-5 border border-border hover:border-border-strong transition-colors">
       <div className="flex items-start justify-between gap-3">
@@ -22,25 +21,15 @@ export function FeedCard({ feed }: FeedCardProps) {
           <div className="flex items-center gap-3">
             <div
               className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                isChangelog ? "bg-emerald-50" : "bg-accent-subtle"
+                feed.feedType === "changelog" ? "bg-emerald-50" : "bg-accent-subtle"
               }`}
             >
-              {isChangelog ? (
-                <GitBranch size={16} className="text-changelog" />
-              ) : (
-                <Rss size={16} className="text-accent" />
-              )}
+              <FeedTypeIcon type={feed.feedType} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold truncate text-ink">{feed.title ?? feed.url}</h3>
-                <span
-                  className={`shrink-0 text-[10px] font-mono px-2 py-0.5 rounded ${
-                    isChangelog ? "bg-emerald-50 text-changelog" : "bg-accent-subtle text-accent"
-                  }`}
-                >
-                  {feed.feedType}
-                </span>
+                <FeedTypeBadge type={feed.feedType} />
               </div>
               <p className="text-xs text-ink-muted mt-0.5 truncate font-mono">{feed.url}</p>
             </div>

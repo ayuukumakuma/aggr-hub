@@ -24,7 +24,13 @@ export function startScheduler(): void {
 
     console.log(`[cron] Found ${dueFeeds.length} feeds to refresh`);
 
-    await Promise.allSettled(dueFeeds.map((feed) => fetchAndStoreFeed(feed)));
+    const results = await Promise.allSettled(dueFeeds.map((feed) => fetchAndStoreFeed(feed)));
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === "rejected") {
+        console.error(`[cron] Failed to refresh feed ${dueFeeds[i].url}:`, result.reason);
+      }
+    }
   });
 
   console.log("[cron] Scheduler started (every 15 minutes)");

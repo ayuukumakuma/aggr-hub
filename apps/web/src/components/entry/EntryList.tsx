@@ -1,10 +1,11 @@
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Inbox, Loader2 } from "lucide-react";
 import { EntryCard } from "./EntryCard.js";
 import { useEntries } from "../../hooks/useEntries.js";
+import { useIntersectionObserver } from "../../hooks/useIntersectionObserver.js";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { ja } from "date-fns/locale";
-import type { Feed } from "../../lib/api.js";
+import type { Feed, Entry } from "../../lib/api.js";
 
 interface EntryListProps {
   feedId?: string;
@@ -21,33 +22,46 @@ function formatDateLabel(dateStr: string): string {
   return format(date, "M月d日 (E)", { locale: ja });
 }
 
+function AnimatedEntryCard({
+  entry,
+  index,
+  feedTitle,
+}: {
+  entry: Entry;
+  index: number;
+  feedTitle?: string;
+}) {
+  return (
+    <div
+      className="animate-slide-up"
+      style={index < 5 ? { animationDelay: `${index * 50}ms` } : undefined}
+    >
+      <EntryCard entry={entry} feedTitle={feedTitle} />
+    </div>
+  );
+}
+
+function PaginationFooter({ isFetchingNextPage }: { isFetchingNextPage: boolean }) {
+  if (!isFetchingNextPage) return null;
+  return (
+    <div className="flex items-center justify-center gap-2 py-4 text-ink-muted text-sm">
+      <Loader2 size={16} className="animate-spin" />
+      読み込み中...
+    </div>
+  );
+}
+
 export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useEntries({
     feedId,
     isRead,
   });
 
-  const observerRef = useRef<HTMLDivElement>(null);
-
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-        void fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
+  const onIntersect = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const observerRef = useIntersectionObserver(
+    onIntersect,
+    hasNextPage === true && !isFetchingNextPage,
   );
-
-  useEffect(() => {
-    const el = observerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [handleObserver]);
 
   const feedMap = useMemo(() => new Map(feeds?.map((f) => [f.id, f])), [feeds]);
   const allEntries = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
@@ -113,27 +127,18 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
             </div>
             <div className="space-y-2">
               {group.entries.map((entry, i) => (
-                <div
+                <AnimatedEntryCard
                   key={entry.id}
-                  className="animate-slide-up"
-                  style={i < 5 ? { animationDelay: `${i * 50}ms` } : undefined}
-                >
-                  <EntryCard
-                    entry={entry}
-                    feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
-                  />
-                </div>
+                  entry={entry}
+                  index={i}
+                  feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
+                />
               ))}
             </div>
           </div>
         ))}
         <div ref={observerRef} className="h-4" />
-        {isFetchingNextPage && (
-          <div className="flex items-center justify-center gap-2 py-4 text-ink-muted text-sm">
-            <Loader2 size={16} className="animate-spin" />
-            読み込み中...
-          </div>
-        )}
+        <PaginationFooter isFetchingNextPage={isFetchingNextPage} />
       </div>
     );
   }
@@ -141,21 +146,15 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
   return (
     <div className="space-y-2">
       {allEntries.map((entry, i) => (
-        <div
+        <AnimatedEntryCard
           key={entry.id}
-          className="animate-slide-up"
-          style={i < 5 ? { animationDelay: `${i * 50}ms` } : undefined}
-        >
-          <EntryCard entry={entry} feedTitle={feedMap.get(entry.feedId)?.title ?? undefined} />
-        </div>
+          entry={entry}
+          index={i}
+          feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
+        />
       ))}
       <div ref={observerRef} className="h-4" />
-      {isFetchingNextPage && (
-        <div className="flex items-center justify-center gap-2 py-4 text-ink-muted text-sm">
-          <Loader2 size={16} className="animate-spin" />
-          読み込み中...
-        </div>
-      )}
+      <PaginationFooter isFetchingNextPage={isFetchingNextPage} />
     </div>
   );
 }

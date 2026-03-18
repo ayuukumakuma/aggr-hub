@@ -19,8 +19,16 @@ export const entryRoutes = new Hono()
       conditions.push(eq(entries.isRead, isRead === "true"));
     }
     if (cursor) {
-      const decoded = Buffer.from(cursor, "base64").toString();
-      const [publishedAt, id] = decoded.split("|");
+      let publishedAt: string;
+      let id: string;
+      try {
+        const decoded = Buffer.from(cursor, "base64").toString();
+        const parts = decoded.split("|");
+        if (parts.length !== 2 || !parts[1]) throw new Error("Invalid cursor format");
+        [publishedAt, id] = parts;
+      } catch {
+        return c.json({ error: "Invalid cursor" }, 400);
+      }
       conditions.push(sql`(${entries.publishedAt}, ${entries.id}) < (${publishedAt}, ${id})`);
     }
 

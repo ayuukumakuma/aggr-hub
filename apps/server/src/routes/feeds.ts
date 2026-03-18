@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { feeds } from "../db/schema.js";
-import { fetchAndStoreFeed, detectAndParseFeed } from "../services/feedFetcher.js";
+import { fetchAndStoreFeed } from "../services/feedFetcher.js";
+import { detectAndParseFeed } from "../services/feedDetector.js";
 
 export const feedRoutes = new Hono()
   .get("/feeds", async (c) => {

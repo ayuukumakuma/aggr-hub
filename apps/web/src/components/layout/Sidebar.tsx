@@ -1,6 +1,7 @@
 import { NavLink } from "react-router";
-import { Rss, List, Home, GitBranch } from "lucide-react";
+import { List, Home } from "lucide-react";
 import type { Feed } from "../../lib/api.js";
+import { FeedTypeIcon, FeedTypeBadge } from "../feed/FeedTypeBadge.js";
 
 interface SidebarProps {
   feeds: Feed[];
@@ -53,20 +54,12 @@ export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
               className={navLinkClass}
               onClick={onClose}
             >
-              {feed.feedType === "changelog" ? (
-                <GitBranch size={14} className="text-changelog shrink-0" />
-              ) : (
-                <Rss size={14} className="text-accent shrink-0" />
-              )}
+              <span className="shrink-0">
+                <FeedTypeIcon type={feed.feedType} size={14} />
+              </span>
               <span className="truncate">{feed.title ?? feed.url}</span>
-              <span
-                className={`ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                  feed.feedType === "changelog"
-                    ? "bg-emerald-50 text-changelog"
-                    : "bg-accent-subtle text-accent"
-                }`}
-              >
-                {feed.feedType}
+              <span className="ml-auto">
+                <FeedTypeBadge type={feed.feedType} />
               </span>
             </NavLink>
           ))}
