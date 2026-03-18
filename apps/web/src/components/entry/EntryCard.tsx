@@ -8,10 +8,9 @@ import { ja } from "date-fns/locale";
 interface EntryCardProps {
   entry: Entry;
   feedTitle?: string;
-  feedUrl?: string;
 }
 
-export function EntryCard({ entry, feedTitle, feedUrl }: EntryCardProps) {
+export function EntryCard({ entry, feedTitle }: EntryCardProps) {
   const toggleRead = useToggleRead();
   const [imgError, setImgError] = useState(false);
 
@@ -26,7 +25,7 @@ export function EntryCard({ entry, feedTitle, feedUrl }: EntryCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <a
-                href={feedUrl ?? entry.url ?? "#"}
+                href={entry.url ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-ink group-hover:text-accent transition-colors"

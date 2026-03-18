@@ -110,26 +110,22 @@ async function fetchRssFeed(feed: Feed): Promise<void> {
   }));
   const ogpImages = await fetchOgImages(itemsNeedingOgp);
 
-  for (let i = 0; i < parsed.items.length; i++) {
-    const item = parsed.items[i];
-    if (!item.guid) continue;
+  const rows = parsed.items
+    .filter((item) => item.guid)
+    .map((item, i) => ({
+      feedId: feed.id,
+      title: item.title,
+      url: item.url,
+      contentHtml: item.contentHtml,
+      contentText: item.contentText,
+      author: item.author,
+      publishedAt: item.publishedAt,
+      guid: item.guid,
+      ogImageUrl: item.imageUrl ?? ogpImages[i],
+    }));
 
-    const ogImageUrl = item.imageUrl ?? ogpImages[i];
-
-    await db
-      .insert(entries)
-      .values({
-        feedId: feed.id,
-        title: item.title,
-        url: item.url,
-        contentHtml: item.contentHtml,
-        contentText: item.contentText,
-        author: item.author,
-        publishedAt: item.publishedAt,
-        guid: item.guid,
-        ogImageUrl,
-      })
-      .onConflictDoNothing();
+  if (rows.length > 0) {
+    await db.insert(entries).values(rows).onConflictDoNothing();
   }
 }
 
@@ -151,32 +147,27 @@ async function fetchChangelogFeed(feed: Feed): Promise<void> {
     .where(eq(entries.feedId, feed.id))
     .orderBy(desc(entries.publishedAt));
 
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (!item.guid) continue;
+  const rows = items
+    .filter((item) => item.guid)
+    .map((item, i) => {
+      const rawChangelog = item.rawChangelog ?? item.contentText;
+      let diffHtml: string | undefined;
 
-    // Compute diff against previous version
-    let diffHtml: string | undefined;
-    const rawChangelog = item.rawChangelog ?? item.contentText;
+      if (rawChangelog) {
+        const prevItem = items[i + 1];
+        const prevText = prevItem?.rawChangelog ?? prevItem?.contentText;
 
-    if (rawChangelog) {
-      const prevItem = items[i + 1];
-      const prevText = prevItem?.rawChangelog ?? prevItem?.contentText;
-
-      if (!prevText) {
-        // Check existing entries for previous version
-        const prevExisting = existingEntries.find((e) => e.version && e.version !== item.version);
-        if (prevExisting?.rawChangelog) {
-          diffHtml = computeDiffHtml(prevExisting.rawChangelog, rawChangelog);
+        if (!prevText) {
+          const prevExisting = existingEntries.find((e) => e.version && e.version !== item.version);
+          if (prevExisting?.rawChangelog) {
+            diffHtml = computeDiffHtml(prevExisting.rawChangelog, rawChangelog);
+          }
+        } else {
+          diffHtml = computeDiffHtml(prevText, rawChangelog);
         }
-      } else {
-        diffHtml = computeDiffHtml(prevText, rawChangelog);
       }
-    }
 
-    await db
-      .insert(entries)
-      .values({
+      return {
         feedId: feed.id,
         title: item.title,
         url: item.url,
@@ -187,7 +178,10 @@ async function fetchChangelogFeed(feed: Feed): Promise<void> {
         version: item.version ?? item.title,
         rawChangelog: rawChangelog,
         diffHtml,
-      })
-      .onConflictDoNothing();
+      };
+    });
+
+  if (rows.length > 0) {
+    await db.insert(entries).values(rows).onConflictDoNothing();
   }
 }

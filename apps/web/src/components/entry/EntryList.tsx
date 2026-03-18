@@ -49,8 +49,8 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  const feedMap = new Map(feeds?.map((f) => [f.id, f]));
-  const allEntries = data?.pages.flatMap((p) => p.data) ?? [];
+  const feedMap = useMemo(() => new Map(feeds?.map((f) => [f.id, f])), [feeds]);
+  const allEntries = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   const grouped = useMemo(() => {
     if (!groupByDate) return null;
@@ -121,7 +121,6 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
                   <EntryCard
                     entry={entry}
                     feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
-                    feedUrl={feedMap.get(entry.feedId)?.url}
                   />
                 </div>
               ))}

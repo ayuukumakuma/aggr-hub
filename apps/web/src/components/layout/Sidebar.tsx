@@ -8,6 +8,13 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+    isActive
+      ? "bg-accent-subtle text-accent font-semibold border-l-2 border-accent"
+      : "text-ink-muted hover:bg-muted hover:text-ink"
+  }`;
+
 export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
   return (
     <>
@@ -23,33 +30,12 @@ export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-2">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-accent-subtle text-accent font-semibold border-l-2 border-accent"
-                  : "text-ink-muted hover:bg-muted hover:text-ink"
-              }`
-            }
-            onClick={onClose}
-          >
+          <NavLink to="/" end className={navLinkClass} onClick={onClose}>
             <Home size={18} />
             タイムライン
           </NavLink>
 
-          <NavLink
-            to="/feeds"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-accent-subtle text-accent font-semibold border-l-2 border-accent"
-                  : "text-ink-muted hover:bg-muted hover:text-ink"
-              }`
-            }
-            onClick={onClose}
-          >
+          <NavLink to="/feeds" className={navLinkClass} onClick={onClose}>
             <List size={18} />
             フィード管理
           </NavLink>
@@ -64,13 +50,7 @@ export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
             <NavLink
               key={feed.id}
               to={`/feeds/${feed.id}`}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-accent-subtle text-accent font-semibold border-l-2 border-accent"
-                    : "text-ink-muted hover:bg-muted hover:text-ink"
-                }`
-              }
+              className={navLinkClass}
               onClick={onClose}
             >
               {feed.feedType === "changelog" ? (

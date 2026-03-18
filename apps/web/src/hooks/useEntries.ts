@@ -23,9 +23,7 @@ export function useToggleRead() {
   return useMutation({
     mutationFn: ({ id, isRead }: { id: string; isRead: boolean }) =>
       api.entries.update(id, { isRead }),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["entries"] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entries"] }),
   });
 }
 
@@ -33,8 +31,6 @@ export function useMarkRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (entryIds: string[]) => api.entries.markRead(entryIds),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["entries"] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entries"] }),
   });
 }

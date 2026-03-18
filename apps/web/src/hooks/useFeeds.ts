@@ -19,10 +19,11 @@ export function useCreateFeed() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (url: string) => api.feeds.create(url),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["feeds"] });
-      await qc.invalidateQueries({ queryKey: ["entries"] });
-    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["feeds"] }),
+        qc.invalidateQueries({ queryKey: ["entries"] }),
+      ]),
   });
 }
 
@@ -30,10 +31,11 @@ export function useDeleteFeed() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.feeds.delete(id),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["feeds"] });
-      await qc.invalidateQueries({ queryKey: ["entries"] });
-    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["feeds"] }),
+        qc.invalidateQueries({ queryKey: ["entries"] }),
+      ]),
   });
 }
 
@@ -41,9 +43,10 @@ export function useRefreshFeed() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.feeds.refresh(id),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["entries"] });
-      await qc.invalidateQueries({ queryKey: ["feeds"] });
-    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["feeds"] }),
+        qc.invalidateQueries({ queryKey: ["entries"] }),
+      ]),
   });
 }

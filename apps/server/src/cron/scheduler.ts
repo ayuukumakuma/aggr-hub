@@ -24,9 +24,7 @@ export function startScheduler(): void {
 
     console.log(`[cron] Found ${dueFeeds.length} feeds to refresh`);
 
-    for (const feed of dueFeeds) {
-      await fetchAndStoreFeed(feed);
-    }
+    await Promise.allSettled(dueFeeds.map((feed) => fetchAndStoreFeed(feed)));
   });
 
   console.log("[cron] Scheduler started (every 15 minutes)");
