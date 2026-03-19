@@ -43,6 +43,7 @@ export interface Entry {
   author: string | null;
   publishedAt: string | null;
   isRead: boolean;
+  isFavorite: boolean;
   guid: string;
   ogImageUrl: string | null;
   summary: string | null;
@@ -77,17 +78,24 @@ export const api = {
       request<{ success: boolean }>(`/feeds/${id}/refresh`, { method: "POST" }),
   },
   entries: {
-    list: (params?: { feedId?: string; isRead?: string; cursor?: string; limit?: number }) => {
+    list: (params?: {
+      feedId?: string;
+      isRead?: string;
+      isFavorite?: string;
+      cursor?: string;
+      limit?: number;
+    }) => {
       const searchParams = new URLSearchParams();
       if (params?.feedId) searchParams.set("feedId", params.feedId);
       if (params?.isRead !== undefined) searchParams.set("isRead", params.isRead);
+      if (params?.isFavorite !== undefined) searchParams.set("isFavorite", params.isFavorite);
       if (params?.cursor) searchParams.set("cursor", params.cursor);
       if (params?.limit) searchParams.set("limit", String(params.limit));
       const query = searchParams.toString();
       return request<PaginatedEntries>(`/entries${query ? `?${query}` : ""}`);
     },
     get: (id: string) => request<Entry>(`/entries/${id}`),
-    update: (id: string, data: { isRead?: boolean }) =>
+    update: (id: string, data: { isRead?: boolean; isFavorite?: boolean }) =>
       request<Entry>(`/entries/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -97,7 +105,25 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ entryIds }),
       }),
-    regenerateSummary: (id: string) =>
-      request<Entry>(`/entries/${id}/regenerate-summary`, { method: "POST" }),
+    markAllRead: (feedId?: string) =>
+      request<{ success: boolean }>("/entries/mark-all-read", {
+        method: "POST",
+        body: JSON.stringify({ feedId }),
+      }),
+    markUnread: (entryIds: string[]) =>
+      request<{ success: boolean }>("/entries/mark-unread", {
+        method: "POST",
+        body: JSON.stringify({ entryIds }),
+      }),
+    markAllUnread: (feedId?: string) =>
+      request<{ success: boolean }>("/entries/mark-all-unread", {
+        method: "POST",
+        body: JSON.stringify({ feedId }),
+      }),
+    markUnfavorite: (entryIds: string[]) =>
+      request<{ success: boolean }>("/entries/mark-unfavorite", {
+        method: "POST",
+        body: JSON.stringify({ entryIds }),
+      }),
   },
 };

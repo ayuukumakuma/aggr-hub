@@ -1,18 +1,36 @@
 import { useState, useRef, useEffect } from "react";
-import { Eye, EyeOff, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  CircleCheck,
+  CircleDashed,
+  ChevronDown,
+  ChevronUp,
+  Square,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 import type { Entry } from "../../lib/api.js";
-import { useToggleRead, useRegenerateSummary } from "../../hooks/useEntries.js";
+import { useToggleRead, useToggleFavorite } from "../../hooks/useEntries.js";
 import { formatDistanceToNow } from "date-fns";
-import { ja } from "date-fns/locale";
 
 interface EntryCardProps {
   entry: Entry;
   feedTitle?: string;
+  hasSelection?: boolean;
+  selected?: boolean;
+  onSelect?: (id: string) => void;
+  hideReadState?: boolean;
 }
 
-export function EntryCard({ entry, feedTitle }: EntryCardProps) {
+export function EntryCard({
+  entry,
+  feedTitle,
+  hasSelection,
+  selected,
+  onSelect,
+  hideReadState,
+}: EntryCardProps) {
   const toggleRead = useToggleRead();
-  const regenerate = useRegenerateSummary();
+  const toggleFavorite = useToggleFavorite();
   const [imgError, setImgError] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -25,12 +43,73 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
     }
   }, [entry.summary, entry.contentText]);
 
+  const actionBtnClass =
+    "flex flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] whitespace-nowrap text-secondary hover:text-primary hover:bg-surface-container rounded-lg opacity-0 group-hover:animate-slide-in-right";
+
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={`relative group flex items-start gap-2 ${hasSelection ? "cursor-pointer" : ""}`}
+      onClick={hasSelection ? () => onSelect?.(entry.id) : undefined}
+    >
+      {hasSelection ? (
+        <div className="flex items-center pt-3 pl-1 shrink-0">
+          <div
+            className={`w-4 h-4 outline outline-1 outline-outline flex items-center justify-center transition-colors duration-150 [transition-timing-function:linear] ${
+              selected ? "bg-primary outline-primary" : ""
+            }`}
+          >
+            {selected && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path
+                  d="M1 4L3.5 6.5L9 1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-on-primary"
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="absolute right-full top-1/2 -translate-y-1/2 z-10 pr-1 pointer-events-none group-hover:pointer-events-auto flex flex-col gap-0.5">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.(entry.id);
+            }}
+            className={actionBtnClass}
+            title="Select"
+          >
+            <Square size={18} />
+            Select
+          </button>
+          {!hideReadState && (
+            <button
+              onClick={() => toggleRead.mutate({ id: entry.id, isRead: !entry.isRead })}
+              className={`${actionBtnClass} group-hover:[animation-delay:60ms]`}
+              title={entry.isRead ? "Mark unread" : "Mark read"}
+            >
+              {entry.isRead ? <CircleDashed size={18} /> : <CircleCheck size={18} />}
+              {entry.isRead ? "Mark unread" : "Mark read"}
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite.mutate({ id: entry.id, isFavorite: !entry.isFavorite });
+            }}
+            className={`${actionBtnClass} ${hideReadState ? "group-hover:[animation-delay:60ms]" : "group-hover:[animation-delay:120ms]"}`}
+            title={entry.isFavorite ? "Unfavorite" : "Favorite"}
+          >
+            {entry.isFavorite ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+            {entry.isFavorite ? "Unfavorite" : "Favorite"}
+          </button>
+        </div>
+      )}
       <div
-        className={`group flex-1 min-w-0 bg-surface-container-lowest outline outline-1 outline-outline rounded-xl py-3 px-3 transition-colors duration-150 [transition-timing-function:linear] hover:bg-surface-container ${
-          entry.isRead ? "opacity-40" : ""
-        }`}
+        className={`flex-1 min-w-0 bg-surface-container-lowest outline outline-1 rounded-xl py-3 px-3 transition-all duration-150 [transition-timing-function:linear] group-hover:bg-surface-container ${
+          selected ? "outline-primary" : "outline-outline"
+        } ${!hideReadState && entry.isRead ? "opacity-40" : ""} ${hasSelection && !selected ? "brightness-95 opacity-60" : ""} ${hasSelection ? "pointer-events-none" : ""}`}
       >
         <div
           ref={contentRef}
@@ -61,7 +140,6 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
                   <span>
                     {formatDistanceToNow(new Date(entry.publishedAt), {
                       addSuffix: true,
-                      locale: ja,
                     })}
                   </span>
                 )}
@@ -78,13 +156,20 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
           </div>
 
           {entry.ogImageUrl && !imgError && (
-            <img
-              src={entry.ogImageUrl}
-              alt=""
-              className="shrink-0 w-60 h-32 object-contain self-center"
-              loading="lazy"
-              onError={() => setImgError(true)}
-            />
+            <a
+              href={entry.url ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 self-center"
+            >
+              <img
+                src={entry.ogImageUrl}
+                alt=""
+                className="w-60 h-32 object-contain self-center"
+                loading="lazy"
+                onError={() => setImgError(true)}
+              />
+            </a>
           )}
         </div>
         {(isOverflowing || expanded) && (
@@ -95,39 +180,16 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
             {expanded ? (
               <>
                 <ChevronUp size={14} />
-                閉じる
+                Close
               </>
             ) : (
               <>
                 <ChevronDown size={14} />
-                もっと見る
+                Show more
               </>
             )}
           </button>
         )}
-      </div>
-
-      <div className="shrink-0 flex flex-col gap-2.5">
-        <button
-          onClick={() => regenerate.mutate(entry.id)}
-          disabled={regenerate.isPending}
-          className="p-2.5 outline outline-1 outline-outline rounded-xl text-secondary hover:outline-primary hover:text-primary transition-colors duration-150 [transition-timing-function:linear]"
-          title="要約を再生成"
-        >
-          <RefreshCw size={24} className={regenerate.isPending ? "animate-spin" : ""} />
-        </button>
-
-        <button
-          onClick={() => toggleRead.mutate({ id: entry.id, isRead: !entry.isRead })}
-          className={`p-2.5 outline outline-1 outline-outline rounded-xl transition-colors duration-150 [transition-timing-function:linear] ${
-            entry.isRead
-              ? "text-secondary hover:outline-primary hover:text-primary"
-              : "text-secondary hover:outline-primary hover:text-primary"
-          }`}
-          title={entry.isRead ? "未読にする" : "既読にする"}
-        >
-          {entry.isRead ? <EyeOff size={24} /> : <Eye size={24} />}
-        </button>
       </div>
     </div>
   );

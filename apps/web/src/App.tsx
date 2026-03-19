@@ -4,6 +4,7 @@ import { MainLayout } from "./components/layout/MainLayout.js";
 import { TimelinePage } from "./pages/TimelinePage.js";
 import { FeedListPage } from "./pages/FeedListPage.js";
 import { FeedDetailPage } from "./pages/FeedDetailPage.js";
+import { FavoritesPage } from "./pages/FavoritesPage.js";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,7 @@ export function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route index element={<TimelinePage />} />
+            <Route path="favorites" element={<FavoritesPage />} />
             <Route path="feeds" element={<FeedListPage />} />
             <Route path="feeds/:id" element={<FeedDetailPage />} />
           </Route>

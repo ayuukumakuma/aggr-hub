@@ -40,6 +40,7 @@ export const entries = pgTable(
     author: text("author"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     isRead: boolean("is_read").notNull().default(false),
+    isFavorite: boolean("is_favorite").notNull().default(false),
     guid: text("guid").notNull(),
     ogImageUrl: text("og_image_url"),
     summary: text("summary"),

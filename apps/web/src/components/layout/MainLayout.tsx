@@ -54,7 +54,7 @@ export function MainLayout() {
       />
 
       <div
-        className="hidden lg:block w-px bg-outline shrink-0 hover:bg-primary cursor-col-resize transition-colors duration-150 [transition-timing-function:linear] active:bg-primary"
+        className="hidden lg:block w-px bg-outline shrink-0 hover:bg-primary cursor-col-resize transition-colors duration-150 ease-linear active:bg-primary"
         onMouseDown={handleDragStart}
       />
 
@@ -62,13 +62,13 @@ export function MainLayout() {
         <header className="h-14 flex items-center justify-between px-5 shrink-0 bg-surface-container-low sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden p-2 hover:bg-surface-container-high transition-colors duration-150 [transition-timing-function:linear]"
+              className="lg:hidden p-2 outline outline-1 outline-primary text-primary rounded-lg hover:bg-primary hover:text-on-primary transition-colors duration-150 ease-linear"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={20} />
             </button>
             <span className="text-sm font-bold font-display text-primary tracking-tight">
-              aggr-hub
+              Aggr Hub
             </span>
           </div>
 

@@ -11,15 +11,16 @@ export function FeedListPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold tracking-[-0.02em] font-display text-primary">
-          フィード管理
-        </h1>
+        <h1 className="text-4xl font-bold tracking-[-0.02em] font-display text-primary">Feeds</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-primary text-on-primary hover:bg-on-primary hover:text-primary hover:outline hover:outline-2 hover:outline-primary transition-colors duration-150 [transition-timing-function:linear]"
+          className="group inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl outline outline-1 outline-primary text-primary hover:bg-primary hover:text-on-primary transition-colors duration-150 [transition-timing-function:linear]"
         >
-          <Plus size={16} />
-          追加
+          <Plus
+            size={16}
+            className="transition-transform duration-200 ease-linear group-hover:rotate-90"
+          />
+          Add
         </button>
       </div>
 
@@ -45,15 +46,15 @@ export function FeedListPage() {
           <div className="w-14 h-14 bg-surface-container flex items-center justify-center mb-4">
             <Rss size={24} className="text-secondary" />
           </div>
-          <p className="text-secondary font-medium">フィードがまだ登録されていません</p>
+          <p className="text-secondary font-medium">No feeds registered yet</p>
           <p className="text-sm text-secondary/60 mt-1 text-center max-w-xs">
-            RSS/Atom フィード URL を登録できます
+            You can add RSS/Atom feed URLs
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 text-sm bg-primary text-on-primary px-4 py-2 hover:bg-on-primary hover:text-primary hover:outline hover:outline-2 hover:outline-primary transition-colors duration-150 [transition-timing-function:linear]"
+            className="mt-4 text-sm rounded-xl outline outline-1 outline-primary text-primary px-4 py-2 hover:bg-primary hover:text-on-primary transition-colors duration-150 [transition-timing-function:linear]"
           >
-            最初のフィードを追加
+            Add your first feed
           </button>
         </div>
       ) : (

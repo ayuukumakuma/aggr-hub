@@ -1,13 +1,33 @@
 import { Hono } from "hono";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { entries } from "../db/schema.js";
-import { summarizeText } from "../services/summarizer.js";
+
+async function batchUpdateEntries(entryIds: string[], data: Partial<typeof entries.$inferInsert>) {
+  await db.update(entries).set(data).where(inArray(entries.id, entryIds));
+}
+
+async function bulkUpdateEntries(
+  data: Partial<typeof entries.$inferInsert>,
+  baseCondition: SQL,
+  feedId?: string,
+) {
+  const conditions = [baseCondition];
+  if (feedId) {
+    conditions.push(eq(entries.feedId, feedId));
+  }
+  await db
+    .update(entries)
+    .set(data)
+    .where(and(...conditions));
+}
 
 export const entryRoutes = new Hono()
   .get("/entries", async (c) => {
     const feedId = c.req.query("feedId");
     const isRead = c.req.query("isRead");
+    const isFavorite = c.req.query("isFavorite");
     const cursor = c.req.query("cursor");
     const limit = Math.min(Number(c.req.query("limit") ?? 30), 100);
 
@@ -18,6 +38,9 @@ export const entryRoutes = new Hono()
     }
     if (isRead !== undefined && isRead !== "") {
       conditions.push(eq(entries.isRead, isRead === "true"));
+    }
+    if (isFavorite !== undefined && isFavorite !== "") {
+      conditions.push(eq(entries.isFavorite, isFavorite === "true"));
     }
     if (cursor) {
       let publishedAt: string;
@@ -65,7 +88,7 @@ export const entryRoutes = new Hono()
 
   .patch("/entries/:id", async (c) => {
     const id = c.req.param("id");
-    const body = await c.req.json<{ isRead?: boolean }>();
+    const body = await c.req.json<{ isRead?: boolean; isFavorite?: boolean }>();
 
     const [updated] = await db.update(entries).set(body).where(eq(entries.id, id)).returning();
 
@@ -75,25 +98,30 @@ export const entryRoutes = new Hono()
 
   .post("/entries/mark-read", async (c) => {
     const body = await c.req.json<{ entryIds: string[] }>();
-
-    await db.update(entries).set({ isRead: true }).where(inArray(entries.id, body.entryIds));
-
+    await batchUpdateEntries(body.entryIds, { isRead: true });
     return c.json({ success: true });
   })
 
-  .post("/entries/:id/regenerate-summary", async (c) => {
-    const id = c.req.param("id");
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
-    if (!entry) return c.json({ error: "Entry not found" }, 404);
+  .post("/entries/mark-unread", async (c) => {
+    const body = await c.req.json<{ entryIds: string[] }>();
+    await batchUpdateEntries(body.entryIds, { isRead: false });
+    return c.json({ success: true });
+  })
 
-    const text = entry.contentText ?? entry.contentHtml ?? "";
-    const summary = await summarizeText(text);
+  .post("/entries/mark-all-read", async (c) => {
+    const body = await c.req.json<{ feedId?: string }>();
+    await bulkUpdateEntries({ isRead: true }, eq(entries.isRead, false), body.feedId);
+    return c.json({ success: true });
+  })
 
-    const [updated] = await db
-      .update(entries)
-      .set({ summary: summary ?? null })
-      .where(eq(entries.id, id))
-      .returning();
+  .post("/entries/mark-unfavorite", async (c) => {
+    const body = await c.req.json<{ entryIds: string[] }>();
+    await batchUpdateEntries(body.entryIds, { isFavorite: false });
+    return c.json({ success: true });
+  })
 
-    return c.json(updated);
+  .post("/entries/mark-all-unread", async (c) => {
+    const body = await c.req.json<{ feedId?: string }>();
+    await bulkUpdateEntries({ isRead: false }, eq(entries.isRead, true), body.feedId);
+    return c.json({ success: true });
   });

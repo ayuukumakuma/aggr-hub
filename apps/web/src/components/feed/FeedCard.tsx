@@ -4,7 +4,6 @@ import type { Feed } from "../../lib/api.js";
 import { useDeleteFeed, useRefreshFeed } from "../../hooks/useFeeds.js";
 import { FeedTypeIcon, FeedTypeBadge } from "./FeedTypeBadge.js";
 import { formatDistanceToNow } from "date-fns";
-import { ja } from "date-fns/locale";
 
 interface FeedCardProps {
   feed: Feed;
@@ -32,10 +31,9 @@ export function FeedCard({ feed }: FeedCardProps) {
           </div>
           {feed.lastFetchedAt && (
             <p className="text-xs text-secondary mt-2 ml-12">
-              最終取得:{" "}
+              Last fetched:{" "}
               {formatDistanceToNow(new Date(feed.lastFetchedAt), {
                 addSuffix: true,
-                locale: ja,
               })}
             </p>
           )}
@@ -45,19 +43,19 @@ export function FeedCard({ feed }: FeedCardProps) {
           <button
             onClick={() => refreshFeed.mutate(feed.id)}
             disabled={refreshFeed.isPending}
-            className="p-2 hover:bg-surface-container-high hover:text-primary transition-colors duration-150 [transition-timing-function:linear]"
-            title="更新"
+            className="p-2 outline outline-1 outline-primary text-primary rounded-lg hover:bg-primary hover:text-on-primary transition-colors duration-150 [transition-timing-function:linear]"
+            title="Refresh"
           >
             <RefreshCw size={14} className={refreshFeed.isPending ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => {
-              if (confirm("このフィードを削除しますか？")) {
+              if (confirm("Delete this feed?")) {
                 deleteFeed.mutate(feed.id);
               }
             }}
-            className="p-2 hover:bg-surface-container-high text-destructive transition-colors duration-150 [transition-timing-function:linear]"
-            title="削除"
+            className="p-2 outline outline-1 outline-destructive text-destructive rounded-lg hover:bg-destructive hover:text-on-primary transition-colors duration-150 [transition-timing-function:linear]"
+            title="Delete"
           >
             <Trash2 size={14} />
           </button>

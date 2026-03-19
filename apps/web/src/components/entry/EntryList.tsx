@@ -1,42 +1,63 @@
-import { useCallback, useMemo } from "react";
-import { Inbox, Loader2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { BookmarkX, CircleCheck, CircleDashed, Inbox, Loader2, X } from "lucide-react";
 import { EntryCard } from "./EntryCard.js";
-import { useEntries } from "../../hooks/useEntries.js";
+import {
+  useEntries,
+  useMarkRead,
+  useMarkUnread,
+  useMarkUnfavorite,
+} from "../../hooks/useEntries.js";
 import { useIntersectionObserver } from "../../hooks/useIntersectionObserver.js";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
-import { ja } from "date-fns/locale";
 import type { Feed, Entry } from "../../lib/api.js";
 
 interface EntryListProps {
   feedId?: string;
   isRead?: string;
+  isFavorite?: string;
   feeds?: Feed[];
   groupByDate?: boolean;
+  hideReadState?: boolean;
 }
 
 function formatDateLabel(dateStr: string): string {
-  if (dateStr === "unknown") return "日付不明";
+  if (dateStr === "unknown") return "Unknown date";
   const date = parseISO(dateStr);
-  if (isToday(date)) return "今日";
-  if (isYesterday(date)) return "昨日";
-  return format(date, "M月d日 (E)", { locale: ja });
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
+  return format(date, "MMM d (EEE)");
 }
 
 function AnimatedEntryCard({
   entry,
   index,
   feedTitle,
+  hasSelection,
+  selected,
+  onSelect,
+  hideReadState,
 }: {
   entry: Entry;
   index: number;
   feedTitle?: string;
+  hasSelection?: boolean;
+  selected?: boolean;
+  onSelect?: (id: string) => void;
+  hideReadState?: boolean;
 }) {
   return (
     <div
       className="animate-appear"
       style={index < 5 ? { animationDelay: `${index * 50}ms` } : undefined}
     >
-      <EntryCard entry={entry} feedTitle={feedTitle} />
+      <EntryCard
+        entry={entry}
+        feedTitle={feedTitle}
+        hasSelection={hasSelection}
+        selected={selected}
+        onSelect={onSelect}
+        hideReadState={hideReadState}
+      />
     </div>
   );
 }
@@ -46,16 +67,46 @@ function PaginationFooter({ isFetchingNextPage }: { isFetchingNextPage: boolean 
   return (
     <div className="flex items-center justify-center gap-2 py-4 text-secondary text-sm">
       <Loader2 size={16} className="animate-spin" />
-      読み込み中...
+      Loading...
     </div>
   );
 }
 
-export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps) {
+export function EntryList({
+  feedId,
+  isRead,
+  isFavorite,
+  feeds,
+  groupByDate,
+  hideReadState,
+}: EntryListProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useEntries({
     feedId,
     isRead,
+    isFavorite,
   });
+  const markRead = useMarkRead();
+  const markUnread = useMarkUnread();
+  const markUnfavorite = useMarkUnfavorite();
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const hasSelection = selectedIds.size > 0;
+
+  const handleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleBulkAction = useCallback(
+    (mutate: (ids: string[], options: { onSuccess: () => void }) => void) => {
+      mutate([...selectedIds], { onSuccess: () => setSelectedIds(new Set()) });
+    },
+    [selectedIds],
+  );
 
   const onIntersect = useCallback(() => void fetchNextPage(), [fetchNextPage]);
   const observerRef = useIntersectionObserver(
@@ -105,17 +156,63 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
         <div className="w-14 h-14 bg-surface-container flex items-center justify-center mb-4">
           <Inbox size={24} className="text-secondary" />
         </div>
-        <p className="text-secondary font-medium">エントリがありません</p>
+        <p className="text-secondary font-medium">No entries</p>
         <p className="text-sm text-secondary/60 mt-1 text-center max-w-xs">
-          サイドバーの「フィード管理」からRSSフィードを追加すると、ここにタイムラインが表示されます
+          Add RSS feeds from "Feeds" in the sidebar to see your timeline here
         </p>
       </div>
     );
   }
 
+  const isPending = markRead.isPending || markUnread.isPending || markUnfavorite.isPending;
+
+  const barBtnClass =
+    "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg hover:bg-on-primary hover:text-primary disabled:opacity-40 transition-colors duration-150 [transition-timing-function:linear]";
+
+  const floatingBar = (hasSelection || isPending) && (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary outline outline-2 outline-primary rounded-xl">
+      <span className="text-sm font-mono">{selectedIds.size} selected</span>
+      <div className="w-px h-5 bg-on-primary/30" />
+      {hideReadState ? (
+        <button
+          onClick={() => handleBulkAction(markUnfavorite.mutate)}
+          disabled={isPending}
+          className={barBtnClass}
+        >
+          <BookmarkX size={14} />
+          Unfavorite
+        </button>
+      ) : (
+        <>
+          <button
+            onClick={() => handleBulkAction(markRead.mutate)}
+            disabled={isPending}
+            className={barBtnClass}
+          >
+            <CircleCheck size={14} />
+            Read
+          </button>
+          <button
+            onClick={() => handleBulkAction(markUnread.mutate)}
+            disabled={isPending}
+            className={barBtnClass}
+          >
+            <CircleDashed size={14} />
+            Unread
+          </button>
+        </>
+      )}
+      <div className="w-px h-5 bg-on-primary/30" />
+      <button onClick={() => setSelectedIds(new Set())} className={barBtnClass}>
+        <X size={14} />
+        Clear
+      </button>
+    </div>
+  );
+
   if (grouped) {
     return (
-      <div>
+      <div className={hasSelection ? "pb-20" : ""}>
         {grouped.map((group) => (
           <div key={group.dateKey}>
             <div className="flex items-center gap-3 py-3">
@@ -132,6 +229,10 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
                   entry={entry}
                   index={i}
                   feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
+                  hasSelection={hasSelection}
+                  selected={selectedIds.has(entry.id)}
+                  onSelect={handleSelect}
+                  hideReadState={hideReadState}
                 />
               ))}
             </div>
@@ -139,22 +240,28 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
         ))}
         <div ref={observerRef} className="h-4" />
         <PaginationFooter isFetchingNextPage={isFetchingNextPage} />
+        {floatingBar}
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${hasSelection ? "pb-20" : ""}`}>
       {allEntries.map((entry, i) => (
         <AnimatedEntryCard
           key={entry.id}
           entry={entry}
           index={i}
           feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
+          hasSelection={hasSelection}
+          selected={selectedIds.has(entry.id)}
+          onSelect={handleSelect}
+          hideReadState={hideReadState}
         />
       ))}
       <div ref={observerRef} className="h-4" />
       <PaginationFooter isFetchingNextPage={isFetchingNextPage} />
+      {floatingBar}
     </div>
   );
 }
