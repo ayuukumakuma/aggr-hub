@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { entries } from "../db/schema.js";
+import { summarizeText } from "../services/summarizer.js";
 
 export const entryRoutes = new Hono()
   .get("/entries", async (c) => {
@@ -78,4 +79,21 @@ export const entryRoutes = new Hono()
     await db.update(entries).set({ isRead: true }).where(inArray(entries.id, body.entryIds));
 
     return c.json({ success: true });
+  })
+
+  .post("/entries/:id/regenerate-summary", async (c) => {
+    const id = c.req.param("id");
+    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    if (!entry) return c.json({ error: "Entry not found" }, 404);
+
+    const text = entry.contentText ?? entry.contentHtml ?? "";
+    const summary = await summarizeText(text);
+
+    const [updated] = await db
+      .update(entries)
+      .set({ summary: summary ?? null })
+      .where(eq(entries.id, id))
+      .returning();
+
+    return c.json(updated);
   });

@@ -34,3 +34,11 @@ export function useMarkRead() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["entries"] }),
   });
 }
+
+export function useRegenerateSummary() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.entries.regenerateSummary(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["entries"] }),
+  });
+}

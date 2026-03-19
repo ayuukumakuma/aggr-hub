@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Eye, EyeOff, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import type { Entry } from "../../lib/api.js";
-import { useToggleRead } from "../../hooks/useEntries.js";
+import { useToggleRead, useRegenerateSummary } from "../../hooks/useEntries.js";
 import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 
@@ -12,7 +12,18 @@ interface EntryCardProps {
 
 export function EntryCard({ entry, feedTitle }: EntryCardProps) {
   const toggleRead = useToggleRead();
+  const regenerate = useRegenerateSummary();
   const [imgError, setImgError] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      setIsOverflowing(el.scrollHeight > el.clientHeight);
+    }
+  }, [entry.summary, entry.contentText]);
 
   return (
     <div className="flex items-center gap-2">
@@ -21,7 +32,10 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
           entry.isRead ? "opacity-50" : "border-l-2 border-l-accent"
         }`}
       >
-        <div className="flex items-start gap-3">
+        <div
+          ref={contentRef}
+          className={`flex items-start gap-3 ${expanded ? "" : "h-36 overflow-hidden"}`}
+        >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               {entry.url ? (
@@ -56,11 +70,13 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
               </div>
             </div>
 
-            {entry.contentText && (
-              <p className="text-sm text-ink-muted mt-1 line-clamp-1 leading-relaxed">
+            {entry.summary ? (
+              <p className="text-sm text-ink-muted mt-1 leading-relaxed">{entry.summary}</p>
+            ) : entry.contentText ? (
+              <p className="text-sm text-ink-muted mt-1 line-clamp-2 leading-relaxed">
                 {entry.contentText}
               </p>
-            )}
+            ) : null}
           </div>
 
           {entry.ogImageUrl && !imgError && (
@@ -73,19 +89,48 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
             />
           )}
         </div>
+        {(isOverflowing || expanded) && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-0.5 text-xs text-accent mt-1 hover:underline"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp size={14} />
+                閉じる
+              </>
+            ) : (
+              <>
+                <ChevronDown size={14} />
+                もっと見る
+              </>
+            )}
+          </button>
+        )}
       </div>
 
-      <button
-        onClick={() => toggleRead.mutate({ id: entry.id, isRead: !entry.isRead })}
-        className={`shrink-0 p-2.5 rounded-lg border transition-colors ${
-          entry.isRead
-            ? "border-border text-ink-muted hover:border-accent hover:text-accent"
-            : "border-accent/30 bg-accent-subtle text-accent hover:bg-accent/10"
-        }`}
-        title={entry.isRead ? "未読にする" : "既読にする"}
-      >
-        {entry.isRead ? <EyeOff size={24} /> : <Eye size={24} />}
-      </button>
+      <div className="shrink-0 flex flex-col gap-1">
+        <button
+          onClick={() => regenerate.mutate(entry.id)}
+          disabled={regenerate.isPending}
+          className="p-2.5 rounded-lg border border-border text-ink-muted hover:border-accent hover:text-accent transition-colors"
+          title="要約を再生成"
+        >
+          <RefreshCw size={24} className={regenerate.isPending ? "animate-spin" : ""} />
+        </button>
+
+        <button
+          onClick={() => toggleRead.mutate({ id: entry.id, isRead: !entry.isRead })}
+          className={`p-2.5 rounded-lg border transition-colors ${
+            entry.isRead
+              ? "border-border text-ink-muted hover:border-accent hover:text-accent"
+              : "border-accent/30 bg-accent-subtle text-accent hover:bg-accent/10"
+          }`}
+          title={entry.isRead ? "未読にする" : "既読にする"}
+        >
+          {entry.isRead ? <EyeOff size={24} /> : <Eye size={24} />}
+        </button>
+      </div>
     </div>
   );
 }
