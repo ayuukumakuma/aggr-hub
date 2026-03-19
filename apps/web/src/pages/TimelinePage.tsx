@@ -10,7 +10,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 export function TimelinePage() {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("unread");
   const { data: feeds } = useFeeds();
 
   return (

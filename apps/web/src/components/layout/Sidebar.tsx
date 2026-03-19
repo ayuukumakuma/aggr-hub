@@ -36,7 +36,7 @@ export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
             タイムライン
           </NavLink>
 
-          <NavLink to="/feeds" className={navLinkClass} onClick={onClose}>
+          <NavLink to="/feeds" end className={navLinkClass} onClick={onClose}>
             <List size={18} />
             フィード管理
           </NavLink>

@@ -1,3 +1,7 @@
+try {
+  process.loadEnvFile(new URL("../.env", import.meta.url));
+} catch {}
+
 import { serve } from "@hono/node-server";
 import app from "./app.js";
 import { startScheduler } from "./cron/scheduler.js";

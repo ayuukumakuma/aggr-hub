@@ -12,8 +12,13 @@ dist
 dist-ssr
 *.local
 
+# drizzle-kit generated artifacts
+drizzle.config.js
+drizzle.config.d.ts
+
 # Environment variables
-.env.local
+.env*
+!.env.example
 
 # Editor directories and files
 .vscode/*

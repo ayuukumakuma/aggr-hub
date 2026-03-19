@@ -3,14 +3,11 @@
     "target": "ES2023",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": false,
-    "declaration": true,
+    "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "drizzle.config.ts"]
+  "include": ["src"]
 }
