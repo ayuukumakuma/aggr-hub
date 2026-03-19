@@ -5,8 +5,8 @@ import { useFeeds } from "../hooks/useFeeds.js";
 type Filter = "all" | "unread";
 
 const FILTERS: { value: Filter; label: string }[] = [
-  { value: "all", label: "すべて" },
   { value: "unread", label: "未読" },
+  { value: "all", label: "すべて" },
 ];
 
 export function TimelinePage() {
@@ -16,16 +16,18 @@ export function TimelinePage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold tracking-tight font-serif text-ink">タイムライン</h1>
-        <div className="flex gap-1 bg-surface-2 rounded-lg p-1 border border-border">
+        <h1 className="text-4xl font-bold tracking-[-0.02em] font-display text-primary">
+          タイムライン
+        </h1>
+        <div className="flex gap-0 bg-surface-container p-1">
           {FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`px-3.5 py-1.5 text-sm rounded transition-colors ${
+              className={`px-3.5 py-1.5 text-sm transition-colors duration-150 [transition-timing-function:linear] ${
                 filter === f.value
-                  ? "bg-ink text-white font-medium"
-                  : "text-ink-muted hover:text-ink"
+                  ? "bg-primary text-on-primary font-medium"
+                  : "text-secondary hover:text-primary"
               }`}
             >
               {f.label}

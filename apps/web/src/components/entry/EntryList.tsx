@@ -33,7 +33,7 @@ function AnimatedEntryCard({
 }) {
   return (
     <div
-      className="animate-slide-up"
+      className="animate-appear"
       style={index < 5 ? { animationDelay: `${index * 50}ms` } : undefined}
     >
       <EntryCard entry={entry} feedTitle={feedTitle} />
@@ -44,7 +44,7 @@ function AnimatedEntryCard({
 function PaginationFooter({ isFetchingNextPage }: { isFetchingNextPage: boolean }) {
   if (!isFetchingNextPage) return null;
   return (
-    <div className="flex items-center justify-center gap-2 py-4 text-ink-muted text-sm">
+    <div className="flex items-center justify-center gap-2 py-4 text-secondary text-sm">
       <Loader2 size={16} className="animate-spin" />
       読み込み中...
     </div>
@@ -85,12 +85,12 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
     return (
       <div className="space-y-0">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="border-b border-border py-3 px-2">
+          <div key={i} className="py-3 px-2">
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full shimmer" />
+              <div className="w-7 h-7 shimmer" />
               <div className="flex-1">
-                <div className="h-4 shimmer rounded w-3/4 mb-2" />
-                <div className="h-3 shimmer rounded w-1/2" />
+                <div className="h-4 shimmer w-3/4 mb-2" />
+                <div className="h-3 shimmer w-1/2" />
               </div>
             </div>
           </div>
@@ -101,12 +101,12 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
 
   if (allEntries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
-        <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center mb-4">
-          <Inbox size={24} className="text-ink-muted" />
+      <div className="flex flex-col items-center justify-center py-16 animate-appear">
+        <div className="w-14 h-14 bg-surface-container flex items-center justify-center mb-4">
+          <Inbox size={24} className="text-secondary" />
         </div>
-        <p className="text-ink-muted font-medium">エントリがありません</p>
-        <p className="text-sm text-ink-muted/60 mt-1 text-center max-w-xs">
+        <p className="text-secondary font-medium">エントリがありません</p>
+        <p className="text-sm text-secondary/60 mt-1 text-center max-w-xs">
           サイドバーの「フィード管理」からRSSフィードを追加すると、ここにタイムラインが表示されます
         </p>
       </div>
@@ -119,11 +119,11 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
         {grouped.map((group) => (
           <div key={group.dateKey}>
             <div className="flex items-center gap-3 py-3">
-              <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide whitespace-nowrap">
+              <span className="text-xs font-semibold text-secondary uppercase tracking-widest whitespace-nowrap font-display">
                 {group.label}
               </span>
-              <hr className="flex-1 border-border" />
-              <span className="text-xs text-ink-muted font-mono">{group.entries.length}</span>
+              <div className="flex-1" />
+              <span className="text-xs text-secondary font-mono">{group.entries.length}</span>
             </div>
             <div className="space-y-2">
               {group.entries.map((entry, i) => (

@@ -28,8 +28,8 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`group flex-1 min-w-0 border border-border rounded-lg py-3 px-3 transition-colors hover:bg-muted/50 ${
-          entry.isRead ? "opacity-50" : "border-l-2 border-l-accent"
+        className={`group flex-1 min-w-0 bg-surface-container-lowest outline outline-1 outline-outline rounded-xl py-3 px-3 transition-colors duration-150 [transition-timing-function:linear] hover:bg-surface-container ${
+          entry.isRead ? "opacity-40" : ""
         }`}
       >
         <div
@@ -43,21 +43,19 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
                   href={entry.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-ink group-hover:text-accent transition-colors"
+                  className="font-medium text-primary group-hover:underline transition-colors duration-150 [transition-timing-function:linear]"
                 >
                   {entry.title ?? "Untitled"}
                 </a>
               ) : (
-                <span className="font-medium text-ink">{entry.title ?? "Untitled"}</span>
+                <span className="font-medium text-primary">{entry.title ?? "Untitled"}</span>
               )}
-              <div className="flex items-center gap-1.5 ml-auto text-xs text-ink-muted">
+              <div className="flex items-center gap-1.5 ml-auto text-xs text-secondary">
                 {feedTitle && <span>{feedTitle}</span>}
-                {feedTitle && entry.author && (
-                  <span className="w-1 h-1 rounded-full bg-border-strong" />
-                )}
+                {feedTitle && entry.author && <span className="text-outline">/</span>}
                 {entry.author && <span>{entry.author}</span>}
                 {(feedTitle || entry.author) && entry.publishedAt && (
-                  <span className="w-1 h-1 rounded-full bg-border-strong" />
+                  <span className="text-outline">/</span>
                 )}
                 {entry.publishedAt && (
                   <span>
@@ -71,9 +69,9 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
             </div>
 
             {entry.summary ? (
-              <p className="text-sm text-ink-muted mt-1 leading-relaxed">{entry.summary}</p>
+              <p className="text-sm text-secondary mt-1 leading-relaxed">{entry.summary}</p>
             ) : entry.contentText ? (
-              <p className="text-sm text-ink-muted mt-1 line-clamp-2 leading-relaxed">
+              <p className="text-sm text-secondary mt-1 line-clamp-2 leading-relaxed">
                 {entry.contentText}
               </p>
             ) : null}
@@ -83,7 +81,7 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
             <img
               src={entry.ogImageUrl}
               alt=""
-              className="shrink-0 w-60 h-32 rounded object-contain self-center"
+              className="shrink-0 w-60 h-32 object-contain self-center"
               loading="lazy"
               onError={() => setImgError(true)}
             />
@@ -92,7 +90,7 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
         {(isOverflowing || expanded) && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-0.5 text-xs text-accent mt-1 hover:underline"
+            className="flex items-center gap-0.5 text-[10px] text-secondary mt-1 hover:underline hover:text-primary uppercase tracking-wider"
           >
             {expanded ? (
               <>
@@ -109,11 +107,11 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
         )}
       </div>
 
-      <div className="shrink-0 flex flex-col gap-1">
+      <div className="shrink-0 flex flex-col gap-2.5">
         <button
           onClick={() => regenerate.mutate(entry.id)}
           disabled={regenerate.isPending}
-          className="p-2.5 rounded-lg border border-border text-ink-muted hover:border-accent hover:text-accent transition-colors"
+          className="p-2.5 outline outline-1 outline-outline rounded-xl text-secondary hover:outline-primary hover:text-primary transition-colors duration-150 [transition-timing-function:linear]"
           title="要約を再生成"
         >
           <RefreshCw size={24} className={regenerate.isPending ? "animate-spin" : ""} />
@@ -121,10 +119,10 @@ export function EntryCard({ entry, feedTitle }: EntryCardProps) {
 
         <button
           onClick={() => toggleRead.mutate({ id: entry.id, isRead: !entry.isRead })}
-          className={`p-2.5 rounded-lg border transition-colors ${
+          className={`p-2.5 outline outline-1 outline-outline rounded-xl transition-colors duration-150 [transition-timing-function:linear] ${
             entry.isRead
-              ? "border-border text-ink-muted hover:border-accent hover:text-accent"
-              : "border-accent/30 bg-accent-subtle text-accent hover:bg-accent/10"
+              ? "text-secondary hover:outline-primary hover:text-primary"
+              : "text-secondary hover:outline-primary hover:text-primary"
           }`}
           title={entry.isRead ? "未読にする" : "既読にする"}
         >

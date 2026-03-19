@@ -7,27 +7,29 @@ interface SidebarProps {
   feeds: Feed[];
   isOpen: boolean;
   onClose: () => void;
+  width?: number;
 }
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+  `flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors duration-150 [transition-timing-function:linear] ${
     isActive
-      ? "bg-accent-subtle text-accent font-semibold border-l-2 border-accent"
-      : "text-ink-muted hover:bg-muted hover:text-ink"
+      ? "bg-surface-container-high text-primary font-semibold"
+      : "text-secondary hover:bg-surface-container hover:text-primary"
   }`;
 
-export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ feeds, isOpen, onClose, width }: SidebarProps) {
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={onClose} />}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-surface-2 border-r border-border flex flex-col transition-transform lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 bg-surface-container-low flex flex-col transition-transform duration-150 [transition-timing-function:linear] lg:translate-x-0 shrink-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{ width: width ? `${width}px` : undefined }}
       >
-        <div className="p-5 border-b border-border">
-          <h1 className="text-2xl font-bold tracking-tight font-serif text-ink">aggr-hub</h1>
-          <div className="w-8 h-0.5 bg-accent rounded-full mt-2" />
+        <div className="p-5 bg-surface-container">
+          <h1 className="text-2xl font-bold tracking-tight font-display text-primary">aggr-hub</h1>
+          <div className="w-8 h-0.5 bg-accent mt-2" />
         </div>
 
         <nav className="flex-1 overflow-y-auto p-2">
@@ -41,9 +43,9 @@ export function Sidebar({ feeds, isOpen, onClose }: SidebarProps) {
             フィード管理
           </NavLink>
 
-          <div className="h-px bg-border my-3 mx-3" />
+          <div className="h-4" />
 
-          <div className="px-3 mb-1 text-[10px] font-semibold text-ink-muted uppercase tracking-widest">
+          <div className="px-3 mb-1 text-[10px] font-semibold text-secondary uppercase tracking-widest">
             フィード
           </div>
 

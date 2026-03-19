@@ -9,7 +9,7 @@ interface FeedTypeIconProps {
 }
 
 export function FeedTypeIcon({ type: _type, size = 16 }: FeedTypeIconProps) {
-  return <Rss size={size} className="text-accent" />;
+  return <Rss size={size} className="text-primary" />;
 }
 
 interface FeedTypeBadgeProps {
@@ -18,7 +18,7 @@ interface FeedTypeBadgeProps {
 
 export function FeedTypeBadge({ type }: FeedTypeBadgeProps) {
   return (
-    <span className="shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-subtle text-accent">
+    <span className="shrink-0 text-[10px] font-mono px-1.5 py-0.5 bg-surface-container-high text-primary uppercase">
       {type}
     </span>
   );

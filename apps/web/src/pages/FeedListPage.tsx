@@ -11,10 +11,12 @@ export function FeedListPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold tracking-tight font-serif text-ink">フィード管理</h1>
+        <h1 className="text-4xl font-bold tracking-[-0.02em] font-display text-primary">
+          フィード管理
+        </h1>
         <button
           onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-ink text-white rounded-lg hover:bg-ink-light active:scale-[0.98] transition-all"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-primary text-on-primary hover:bg-on-primary hover:text-primary hover:outline hover:outline-2 hover:outline-primary transition-colors duration-150 [transition-timing-function:linear]"
         >
           <Plus size={16} />
           追加
@@ -22,37 +24,40 @@ export function FeedListPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-0">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-surface-1 rounded-lg p-5 border border-border">
+            <div
+              key={i}
+              className="bg-surface-container-lowest outline outline-1 outline-outline rounded-xl p-5"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg shimmer" />
+                <div className="w-9 h-9 shimmer" />
                 <div className="flex-1">
-                  <div className="h-4 shimmer rounded w-1/2 mb-2" />
-                  <div className="h-3 shimmer rounded w-3/4" />
+                  <div className="h-4 shimmer w-1/2 mb-2" />
+                  <div className="h-3 shimmer w-3/4" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : feeds?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
-          <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center mb-4">
-            <Rss size={24} className="text-ink-muted" />
+        <div className="flex flex-col items-center justify-center py-16 animate-appear">
+          <div className="w-14 h-14 bg-surface-container flex items-center justify-center mb-4">
+            <Rss size={24} className="text-secondary" />
           </div>
-          <p className="text-ink-muted font-medium">フィードがまだ登録されていません</p>
-          <p className="text-sm text-ink-muted/60 mt-1 text-center max-w-xs">
+          <p className="text-secondary font-medium">フィードがまだ登録されていません</p>
+          <p className="text-sm text-secondary/60 mt-1 text-center max-w-xs">
             RSS/Atom フィード URL を登録できます
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 text-sm bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover active:scale-[0.98] transition-all"
+            className="mt-4 text-sm bg-primary text-on-primary px-4 py-2 hover:bg-on-primary hover:text-primary hover:outline hover:outline-2 hover:outline-primary transition-colors duration-150 [transition-timing-function:linear]"
           >
             最初のフィードを追加
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {feeds?.map((feed) => (
             <FeedCard key={feed.id} feed={feed} />
           ))}
