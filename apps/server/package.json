@@ -5,23 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "vp pack",
+    "start": "node dist/index.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@hono/node-server": "^1",
-    "diff": "^7",
     "drizzle-orm": "^0.44",
     "hono": "^4",
     "marked": "^15",
     "node-cron": "^3",
+    "openai": "catalog:",
     "postgres": "^3",
     "rss-parser": "^3"
   },
   "devDependencies": {
-    "@types/diff": "^7",
     "@types/node": "catalog:",
     "@types/node-cron": "^3",
     "drizzle-kit": "^0.31",

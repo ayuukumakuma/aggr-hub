@@ -15,6 +15,20 @@
       "when": 1773824054928,
       "tag": "0001_tiresome_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773881761587,
+      "tag": "0002_icy_the_phantom",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773883683773,
+      "tag": "0003_tiny_tenebrous",
+      "breakpoints": true
     }
   ]
 }

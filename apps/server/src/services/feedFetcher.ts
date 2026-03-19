@@ -1,25 +1,15 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { feeds, entries, type feeds as FeedsTable } from "../db/schema.js";
 import { parseRssFeed } from "./rssParser.js";
-import {
-  type ChangelogItem,
-  isGitHubReleasesUrl,
-  parseGitHubReleases,
-  parseChangelogMd,
-} from "./changelogParser.js";
-import { computeDiffHtml } from "./diffService.js";
 import { fetchOgImages } from "./ogpFetcher.js";
+import { summarizeItems } from "./summarizer.js";
 
 type Feed = typeof FeedsTable.$inferSelect;
 
 export async function fetchAndStoreFeed(feed: Feed): Promise<void> {
   try {
-    if (feed.feedType === "changelog") {
-      await fetchChangelogFeed(feed);
-    } else {
-      await fetchRssFeed(feed);
-    }
+    await fetchRssFeed(feed);
 
     await db
       .update(feeds)
@@ -53,77 +43,22 @@ async function fetchRssFeed(feed: Feed): Promise<void> {
       ogImageUrl: item.imageUrl ?? ogpImages[i],
     }));
 
-  if (rows.length > 0) {
-    await db.insert(entries).values(rows).onConflictDoNothing();
-  }
-}
+  if (rows.length === 0) return;
 
-async function fetchChangelogFeed(feed: Feed): Promise<void> {
-  let items: ChangelogItem[];
+  const inserted = await db
+    .insert(entries)
+    .values(rows)
+    .onConflictDoNothing()
+    .returning({ id: entries.id, contentText: entries.contentText });
 
-  if (isGitHubReleasesUrl(feed.url)) {
-    const parsed = await parseGitHubReleases(feed.url);
-    items = parsed.items;
-  } else {
-    const parsed = await parseChangelogMd(feed.url);
-    items = parsed.items;
-  }
-
-  // Get existing entries for diff computation
-  const existingEntries = await db
-    .select({ version: entries.version, rawChangelog: entries.rawChangelog })
-    .from(entries)
-    .where(eq(entries.feedId, feed.id))
-    .orderBy(desc(entries.publishedAt));
-
-  const rows = items
-    .filter((item) => item.guid)
-    .map((item, i) => {
-      const rawChangelog = item.rawChangelog ?? item.contentText;
-      let diffHtml: string | undefined;
-
-      if (rawChangelog) {
-        const prevItem = items[i + 1];
-        const prevText = prevItem?.rawChangelog ?? prevItem?.contentText;
-
-        if (!prevText) {
-          const prevExisting = existingEntries.find((e) => e.version && e.version !== item.version);
-          if (prevExisting?.rawChangelog) {
-            diffHtml = computeDiffHtml(prevExisting.rawChangelog, rawChangelog);
-          }
-        } else {
-          diffHtml = computeDiffHtml(prevText, rawChangelog);
+  if (inserted.length > 0) {
+    // Fire-and-forget: summarize in background
+    summarizeItems(inserted.map((e) => ({ id: e.id, text: e.contentText })))
+      .then(async (summaries) => {
+        for (const [id, summary] of summaries) {
+          await db.update(entries).set({ summary }).where(eq(entries.id, id));
         }
-      }
-
-      return {
-        feedId: feed.id,
-        title: item.title,
-        url: item.url,
-        contentText: item.contentText,
-        author: item.author,
-        publishedAt: item.publishedAt,
-        guid: item.guid,
-        version: item.version ?? item.title,
-        rawChangelog: rawChangelog,
-        diffHtml,
-      };
-    });
-
-  if (rows.length > 0) {
-    await db
-      .insert(entries)
-      .values(rows)
-      .onConflictDoUpdate({
-        target: [entries.feedId, entries.guid],
-        set: {
-          url: sql`excluded.url`,
-          contentText: sql`excluded.content_text`,
-          author: sql`excluded.author`,
-          version: sql`excluded.version`,
-          rawChangelog: sql`excluded.raw_changelog`,
-          diffHtml: sql`excluded.diff_html`,
-        },
-      });
+      })
+      .catch((error) => console.error("Background summarization failed:", error));
   }
 }

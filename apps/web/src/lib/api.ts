@@ -23,7 +23,7 @@ export interface Feed {
   url: string;
   title: string | null;
   siteUrl: string | null;
-  feedType: "rss" | "atom" | "changelog";
+  feedType: "rss" | "atom";
   description: string | null;
   iconUrl: string | null;
   lastFetchedAt: string | null;
@@ -44,10 +44,8 @@ export interface Entry {
   publishedAt: string | null;
   isRead: boolean;
   guid: string;
-  version: string | null;
-  diffHtml: string | null;
-  rawChangelog: string | null;
   ogImageUrl: string | null;
+  summary: string | null;
   createdAt: string;
 }
 
@@ -99,5 +97,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ entryIds }),
       }),
+    regenerateSummary: (id: string) =>
+      request<Entry>(`/entries/${id}/regenerate-summary`, { method: "POST" }),
   },
 };

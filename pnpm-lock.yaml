@@ -33,6 +33,9 @@ catalogs:
     lucide-react:
       specifier: ^0.577.0
       version: 0.577.0
+    openai:
+      specifier: ^6.32.0
+      version: 6.32.0
     react:
       specifier: ^19.2.4
       version: 19.2.4
@@ -69,9 +72,6 @@ importers:
       '@hono/node-server':
         specifier: ^1
         version: 1.19.11(hono@4.12.8)
-      diff:
-        specifier: ^7
-        version: 7.0.0
       drizzle-orm:
         specifier: ^0.44
         version: 0.44.7(postgres@3.4.8)
@@ -84,6 +84,9 @@ importers:
       node-cron:
         specifier: ^3
         version: 3.0.3
+      openai:
+        specifier: 'catalog:'
+        version: 6.32.0(ws@8.19.0)
       postgres:
         specifier: ^3
         version: 3.4.8
@@ -91,9 +94,6 @@ importers:
         specifier: ^3
         version: 3.13.0
     devDependencies:
-      '@types/diff':
-        specifier: ^7
-        version: 7.0.2
       '@types/node':
         specifier: 'catalog:'
         version: 24.12.0
@@ -1170,9 +1170,6 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/diff@7.0.2':
-    resolution: {integrity: sha512-JSWRMozjFKsGlEjiiKajUjIJVKuKdE3oVy2DNtK+fUo8q82nhFZ2CPQwicAIkXrofahDXrWJ7mjelvZphMS98Q==}
-
   '@types/node-cron@3.0.11':
     resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
 
@@ -1408,10 +1405,6 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
-
-  diff@7.0.0:
-    resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
-    engines: {node: '>=0.3.1'}
 
   drizzle-kit@0.31.10:
     resolution: {integrity: sha512-7OZcmQUrdGI+DUNNsKBn1aW8qSoKuTH7d0mYgSP8bAzdFzKoovxEFnoGQp2dVs82EOJeYycqRtciopszwUf8bw==}
@@ -1744,6 +1737,18 @@ packages:
 
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
+
+  openai@6.32.0:
+    resolution: {integrity: sha512-j3k+BjydAf8yQlcOI7WUQMQTbbF5GEIMAE2iZYCOzwwB3S2pCheaWYp+XZRNAch4jWVc52PMDGRRjutao3lLCg==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   oxfmt@0.40.0:
     resolution: {integrity: sha512-g0C3I7xUj4b4DcagevM9kgH6+pUHytikxUcn3/VUkvzTNaaXBeyZqb7IBsHwojeXm4mTBEC/aBjBTMVUkZwWUQ==}
@@ -2565,8 +2570,6 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
-  '@types/diff@7.0.2': {}
-
   '@types/node-cron@3.0.11': {}
 
   '@types/node@24.12.0':
@@ -2769,8 +2772,6 @@ snapshots:
   defu@6.1.4: {}
 
   detect-libc@2.1.2: {}
-
-  diff@7.0.0: {}
 
   drizzle-kit@0.31.10:
     dependencies:
@@ -3013,6 +3014,10 @@ snapshots:
       uuid: 8.3.2
 
   obug@2.1.1: {}
+
+  openai@6.32.0(ws@8.19.0):
+    optionalDependencies:
+      ws: 8.19.0
 
   oxfmt@0.40.0:
     dependencies:

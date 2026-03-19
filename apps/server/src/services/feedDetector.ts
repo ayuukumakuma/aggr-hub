@@ -1,42 +1,14 @@
 import { parseRssFeed } from "./rssParser.js";
-import {
-  isGitHubReleasesUrl,
-  isChangelogMdUrl,
-  parseGitHubReleases,
-  parseChangelogMd,
-} from "./changelogParser.js";
 
 export interface DetectedFeed {
   feedUrl: string;
   title: string | undefined;
   siteUrl: string | undefined;
-  feedType: "rss" | "atom" | "changelog";
+  feedType: "rss" | "atom";
   description: string | undefined;
 }
 
 export async function detectAndParseFeed(url: string): Promise<DetectedFeed> {
-  if (isGitHubReleasesUrl(url)) {
-    const parsed = await parseGitHubReleases(url);
-    return {
-      feedUrl: url,
-      title: parsed.title,
-      siteUrl: parsed.siteUrl,
-      feedType: "changelog",
-      description: undefined,
-    };
-  }
-
-  if (isChangelogMdUrl(url)) {
-    const parsed = await parseChangelogMd(url);
-    return {
-      feedUrl: url,
-      title: parsed.title,
-      siteUrl: undefined,
-      feedType: "changelog",
-      description: undefined,
-    };
-  }
-
   // Try RSS/Atom
   const res = await fetch(url, { redirect: "follow" });
   const contentType = res.headers.get("content-type") ?? "";

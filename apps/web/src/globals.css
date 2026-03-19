@@ -15,11 +15,6 @@
   --color-border: #e5ddd3;
   --color-border-strong: #d4c9bc;
   --color-destructive: #dc2626;
-  --color-changelog: #0d7c66;
-  --color-diff-added-bg: #dcfce7;
-  --color-diff-added-text: #166534;
-  --color-diff-removed-bg: #fee2e2;
-  --color-diff-removed-text: #991b1b;
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
   --font-serif: "Source Serif 4", Georgia, serif;
 
@@ -87,6 +82,13 @@ body {
   background: rgba(180, 83, 9, 0.2);
 }
 
+button,
+a,
+[role="button"],
+summary {
+  cursor: pointer;
+}
+
 *:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -119,25 +121,4 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-}
-
-.diff-added {
-  background-color: var(--color-diff-added-bg);
-  color: var(--color-diff-added-text);
-  padding: 2px 4px;
-  border-left: 2px solid rgba(13, 124, 102, 0.5);
-  border-radius: 2px;
-}
-
-.diff-removed {
-  background-color: var(--color-diff-removed-bg);
-  color: var(--color-diff-removed-text);
-  padding: 2px 4px;
-  text-decoration: line-through;
-  border-left: 2px solid rgba(220, 38, 38, 0.5);
-  border-radius: 2px;
-}
-
-.diff-unchanged {
-  padding: 2px 4px;
 }

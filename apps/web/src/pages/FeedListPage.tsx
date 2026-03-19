@@ -42,7 +42,7 @@ export function FeedListPage() {
           </div>
           <p className="text-ink-muted font-medium">フィードがまだ登録されていません</p>
           <p className="text-sm text-ink-muted/60 mt-1 text-center max-w-xs">
-            RSS/Atom フィード URL、GitHub Releases URL、または CHANGELOG.md の URL を登録できます
+            RSS/Atom フィード URL を登録できます
           </p>
           <button
             onClick={() => setShowForm(true)}

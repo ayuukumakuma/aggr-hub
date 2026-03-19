@@ -19,11 +19,7 @@ export function FeedCard({ feed }: FeedCardProps) {
       <div className="flex items-start justify-between gap-3">
         <Link to={`/feeds/${feed.id}`} className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <div
-              className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                feed.feedType === "changelog" ? "bg-emerald-50" : "bg-accent-subtle"
-              }`}
-            >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-accent-subtle">
               <FeedTypeIcon type={feed.feedType} />
             </div>
             <div className="min-w-0">

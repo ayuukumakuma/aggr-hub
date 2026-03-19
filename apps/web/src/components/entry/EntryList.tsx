@@ -107,7 +107,7 @@ export function EntryList({ feedId, isRead, feeds, groupByDate }: EntryListProps
         </div>
         <p className="text-ink-muted font-medium">エントリがありません</p>
         <p className="text-sm text-ink-muted/60 mt-1 text-center max-w-xs">
-          サイドバーの「フィード管理」からRSS/Changelogフィードを追加すると、ここにタイムラインが表示されます
+          サイドバーの「フィード管理」からRSSフィードを追加すると、ここにタイムラインが表示されます
         </p>
       </div>
     );

@@ -32,9 +32,7 @@ export function FeedForm({ onClose }: FeedFormProps) {
             required
             autoFocus
           />
-          <p className="text-xs text-ink-muted/60 mt-1.5">
-            RSS/Atom フィード URL、GitHub Releases URL、または CHANGELOG.md の URL
-          </p>
+          <p className="text-xs text-ink-muted/60 mt-1.5">RSS/Atom フィード URL</p>
 
           {createFeed.isError && (
             <p className="text-sm text-destructive mt-2">{createFeed.error.message}</p>

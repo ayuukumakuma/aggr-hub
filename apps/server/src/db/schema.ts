@@ -9,7 +9,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom", "changelog"]);
+export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom"]);
 
 export const feeds = pgTable("feeds", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -41,10 +41,8 @@ export const entries = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     isRead: boolean("is_read").notNull().default(false),
     guid: text("guid").notNull(),
-    version: text("version"),
-    diffHtml: text("diff_html"),
-    rawChangelog: text("raw_changelog"),
     ogImageUrl: text("og_image_url"),
+    summary: text("summary"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [unique("entries_feed_guid_unique").on(table.feedId, table.guid)],
