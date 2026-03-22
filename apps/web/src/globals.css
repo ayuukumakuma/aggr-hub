@@ -162,6 +162,25 @@ button:disabled {
   scrollbar-width: thin;
 }
 
+.release-summary ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.release-summary li {
+  margin-bottom: 0.25rem;
+}
+
+.release-summary h3,
+.release-summary h4 {
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.release-summary p {
+  margin-bottom: 0.25rem;
+}
+
 .shimmer {
   background: linear-gradient(
     90deg,

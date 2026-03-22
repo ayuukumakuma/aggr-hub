@@ -33,6 +33,7 @@ function AnimatedEntryCard({
   index,
   feedTitle,
   feedType,
+  feedUrl,
   hasSelection,
   selected,
   onSelect,
@@ -42,6 +43,7 @@ function AnimatedEntryCard({
   index: number;
   feedTitle?: string;
   feedType?: Feed["feedType"];
+  feedUrl?: string;
   hasSelection?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
@@ -56,6 +58,7 @@ function AnimatedEntryCard({
         entry={entry}
         feedTitle={feedTitle}
         feedType={feedType}
+        feedUrl={feedUrl}
         hasSelection={hasSelection}
         selected={selected}
         onSelect={onSelect}
@@ -233,6 +236,7 @@ export function EntryList({
                   index={i}
                   feedTitle={feedMap.get(entry.feedId)?.title ?? undefined}
                   feedType={feedMap.get(entry.feedId)?.feedType}
+                  feedUrl={feedMap.get(entry.feedId)?.url}
                   hasSelection={hasSelection}
                   selected={selectedIds.has(entry.id)}
                   onSelect={handleSelect}

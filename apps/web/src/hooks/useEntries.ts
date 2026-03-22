@@ -8,6 +8,12 @@ export function useEntries(params?: { feedId?: string; isRead?: string; isFavori
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
+    refetchInterval: (query) => {
+      const hasPending = query.state.data?.pages.some((page) =>
+        page.data.some((entry) => entry.summaryStatus === "pending"),
+      );
+      return hasPending ? 3000 : false;
+    },
   });
 }
 
@@ -56,4 +62,8 @@ export function useMarkUnfavorite() {
 
 export function useMarkAllUnread() {
   return useEntryMutation((feedId?: string) => api.entries.markAllUnread(feedId));
+}
+
+export function useRetrySummary() {
+  return useEntryMutation((id: string) => api.entries.retrySummary(id));
 }

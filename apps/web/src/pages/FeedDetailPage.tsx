@@ -77,7 +77,7 @@ export function FeedDetailPage() {
         </div>
       </div>
 
-      <EntryList feedId={feed.id} />
+      <EntryList feedId={feed.id} feeds={[feed]} />
     </div>
   );
 }

@@ -47,6 +47,8 @@ export interface Entry {
   guid: string;
   ogImageUrl: string | null;
   summary: string | null;
+  detailedSummary: string | null;
+  summaryStatus: "pending" | "completed" | "failed";
   createdAt: string;
 }
 
@@ -125,5 +127,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ entryIds }),
       }),
+    retrySummary: (id: string) =>
+      request<{ success: boolean }>(`/entries/${id}/retry-summary`, { method: "POST" }),
   },
 };
