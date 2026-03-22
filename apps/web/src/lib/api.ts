@@ -23,7 +23,7 @@ export interface Feed {
   url: string;
   title: string | null;
   siteUrl: string | null;
-  feedType: "rss" | "atom";
+  feedType: "rss" | "atom" | "github-releases";
   description: string | null;
   iconUrl: string | null;
   lastFetchedAt: string | null;

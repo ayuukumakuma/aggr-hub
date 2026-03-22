@@ -8,13 +8,14 @@ import {
   Bookmark,
   BookmarkCheck,
 } from "lucide-react";
-import type { Entry } from "../../lib/api.js";
+import type { Entry, Feed } from "../../lib/api.js";
 import { useToggleRead, useToggleFavorite } from "../../hooks/useEntries.js";
 import { formatDistanceToNow } from "date-fns";
 
 interface EntryCardProps {
   entry: Entry;
   feedTitle?: string;
+  feedType?: Feed["feedType"];
   hasSelection?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
@@ -24,6 +25,7 @@ interface EntryCardProps {
 export function EntryCard({
   entry,
   feedTitle,
+  feedType,
   hasSelection,
   selected,
   onSelect,
@@ -155,7 +157,7 @@ export function EntryCard({
             ) : null}
           </div>
 
-          {entry.ogImageUrl && !imgError && (
+          {entry.ogImageUrl && !imgError && feedType !== "github-releases" && (
             <a
               href={entry.url ?? undefined}
               target="_blank"

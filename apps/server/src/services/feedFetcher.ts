@@ -23,25 +23,29 @@ export async function fetchAndStoreFeed(feed: Feed): Promise<void> {
 async function fetchRssFeed(feed: Feed): Promise<void> {
   const parsed = await parseRssFeed(feed.url);
 
-  // Items without RSS-embedded images need OGP fallback
-  const itemsNeedingOgp = parsed.items.map((item) => ({
-    url: item.imageUrl ? undefined : item.url,
-  }));
-  const ogpImages = await fetchOgImages(itemsNeedingOgp);
+  const itemsWithGuid = parsed.items.filter((item) => item.guid);
 
-  const rows = parsed.items
-    .filter((item) => item.guid)
-    .map((item, i) => ({
-      feedId: feed.id,
-      title: item.title,
-      url: item.url,
-      contentHtml: item.contentHtml,
-      contentText: item.contentText,
-      author: item.author,
-      publishedAt: item.publishedAt,
-      guid: item.guid,
-      ogImageUrl: item.imageUrl ?? ogpImages[i],
-    }));
+  // Skip OGP fetching for github-releases feeds
+  const skipOgp = feed.feedType === "github-releases";
+  const ogpImages = skipOgp
+    ? []
+    : await fetchOgImages(
+        itemsWithGuid.map((item) => ({
+          url: item.imageUrl ? undefined : item.url,
+        })),
+      );
+
+  const rows = itemsWithGuid.map((item, i) => ({
+    feedId: feed.id,
+    title: item.title,
+    url: item.url,
+    contentHtml: item.contentHtml,
+    contentText: item.contentText,
+    author: item.author,
+    publishedAt: item.publishedAt,
+    guid: item.guid,
+    ogImageUrl: skipOgp ? undefined : (item.imageUrl ?? ogpImages[i]),
+  }));
 
   if (rows.length === 0) return;
 

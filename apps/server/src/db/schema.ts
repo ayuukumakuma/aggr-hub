@@ -9,7 +9,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom"]);
+export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom", "github-releases"]);
 
 export const feeds = pgTable("feeds", {
   id: uuid("id").defaultRandom().primaryKey(),

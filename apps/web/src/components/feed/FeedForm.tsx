@@ -32,12 +32,12 @@ export function FeedForm({ onClose }: FeedFormProps) {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com/feed.xml"
+            placeholder="https://example.com/feed.xml or GitHub Releases URL"
             className="w-full py-2.5 px-3 bg-transparent rounded-xl outline outline-1 outline-outline focus:outline-accent focus:outline-2 placeholder:text-secondary/40 transition-colors duration-150 [transition-timing-function:linear]"
             required
             autoFocus
           />
-          <p className="text-xs text-secondary mt-1.5">RSS/Atom Feed URL</p>
+          <p className="text-xs text-secondary mt-1.5">RSS/Atom Feed URL or GitHub Releases URL</p>
 
           {createFeed.isError && (
             <p className="text-sm text-destructive mt-2">{createFeed.error.message}</p>

@@ -4,11 +4,41 @@ export interface DetectedFeed {
   feedUrl: string;
   title: string | undefined;
   siteUrl: string | undefined;
-  feedType: "rss" | "atom";
+  feedType: "rss" | "atom" | "github-releases";
   description: string | undefined;
 }
 
+export function tryGitHubReleasesAtomUrl(url: string): string | null {
+  const match = url.match(
+    /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/releases(?:\/.*)?)?(?:\/)?$/,
+  );
+  if (!match) return null;
+  const [, owner, repo] = match;
+  return `https://github.com/${owner}/${repo}/releases.atom`;
+}
+
 export async function detectAndParseFeed(url: string): Promise<DetectedFeed> {
+  // Reject CHANGELOG URLs
+  if (/github\.com\/[^/]+\/[^/]+\/blob\/.+\/CHANGELOG/i.test(url)) {
+    throw new Error(
+      "CHANGELOG files are not supported. Use the repository's Releases page URL instead (e.g., https://github.com/owner/repo/releases).",
+    );
+  }
+
+  // GitHub Releases shortcut: directly construct the .atom URL
+  const githubAtomUrl = tryGitHubReleasesAtomUrl(url);
+  if (githubAtomUrl) {
+    const parsed = await parseRssFeed(githubAtomUrl);
+    const repoName = parsed.title?.replace(/^Release notes from /, "");
+    return {
+      feedUrl: githubAtomUrl,
+      title: repoName,
+      siteUrl: parsed.siteUrl,
+      feedType: "github-releases",
+      description: parsed.description,
+    };
+  }
+
   // Try RSS/Atom
   const res = await fetch(url, { redirect: "follow" });
   const contentType = res.headers.get("content-type") ?? "";
