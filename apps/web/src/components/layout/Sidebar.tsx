@@ -44,12 +44,15 @@ export function Sidebar({
           className={`bg-surface-container rounded-b-lg ${collapsed ? "p-4 flex justify-center" : "p-5"}`}
         >
           {collapsed ? (
-            <div className="w-6 h-0.5 bg-accent" />
+            <img src="/favicon.svg" alt="Aggr Hub" className="w-6 h-6" />
           ) : (
             <>
-              <h1 className="text-2xl font-bold tracking-tight font-display text-primary">
-                Aggr Hub
-              </h1>
+              <div className="flex items-center gap-2">
+                <img src="/favicon.svg" alt="" className="w-7 h-7" />
+                <h1 className="text-2xl font-bold tracking-tight font-display text-primary">
+                  Aggr Hub
+                </h1>
+              </div>
               <div className="w-8 h-0.5 bg-accent mt-2" />
             </>
           )}

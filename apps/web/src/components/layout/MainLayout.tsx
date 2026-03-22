@@ -71,6 +71,7 @@ export function MainLayout() {
             >
               <Menu size={20} />
             </button>
+            <img src="/favicon.svg" alt="" className="w-5 h-5" />
             <span className="text-sm font-bold font-display text-primary tracking-tight">
               Aggr Hub
             </span>
