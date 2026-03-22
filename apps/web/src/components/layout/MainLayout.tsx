@@ -7,9 +7,11 @@ import { useFeeds } from "../../hooks/useFeeds.js";
 const SIDEBAR_MIN = 180;
 const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 256;
+const SIDEBAR_COLLAPSED = 56;
 
 export function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
   const isDragging = useRef(false);
   const { data: feeds } = useFeeds();
@@ -50,11 +52,13 @@ export function MainLayout() {
         feeds={feeds ?? []}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        width={sidebarWidth}
+        width={sidebarCollapsed ? SIDEBAR_COLLAPSED : sidebarWidth}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
       />
 
       <div
-        className="hidden lg:block w-px bg-outline shrink-0 hover:bg-primary cursor-col-resize transition-colors duration-150 ease-linear active:bg-primary"
+        className={`w-px bg-outline shrink-0 hover:bg-primary cursor-col-resize transition-colors duration-150 ease-linear active:bg-primary ${sidebarCollapsed ? "hidden" : "hidden lg:block"}`}
         onMouseDown={handleDragStart}
       />
 
