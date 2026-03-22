@@ -19,7 +19,7 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: ./apps/server/Dockerfile
     environment:
       DATABASE_URL: postgres://aggrhub:aggrhub@postgres:5432/aggrhub
       PORT: 3000
@@ -31,7 +31,7 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: ./apps/web/Dockerfile
     ports:
       - "80:8080"
     depends_on:

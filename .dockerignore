@@ -1,0 +1,4 @@
+*.md
+.zed
+.claude
+node_modules
