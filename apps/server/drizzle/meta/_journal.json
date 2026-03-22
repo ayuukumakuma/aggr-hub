@@ -43,6 +43,20 @@
       "when": 1774156267493,
       "tag": "0005_omniscient_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1774160237128,
+      "tag": "0006_dusty_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774160760080,
+      "tag": "0007_fuzzy_the_enforcers",
+      "breakpoints": true
     }
   ]
 }

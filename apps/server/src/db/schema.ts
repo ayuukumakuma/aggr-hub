@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom", "github-releases"]);
+export const summaryStatusEnum = pgEnum("summary_status", ["pending", "completed", "failed"]);
 
 export const feeds = pgTable("feeds", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -44,6 +45,8 @@ export const entries = pgTable(
     guid: text("guid").notNull(),
     ogImageUrl: text("og_image_url"),
     summary: text("summary"),
+    detailedSummary: text("detailed_summary"),
+    summaryStatus: summaryStatusEnum("summary_status").notNull().default("pending"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [unique("entries_feed_guid_unique").on(table.feedId, table.guid)],
