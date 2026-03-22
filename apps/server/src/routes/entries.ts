@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { entries } from "../db/schema.js";
+import { entries, feeds } from "../db/schema.js";
+import { summarizeItems } from "../services/summarizer.js";
 
 async function batchUpdateEntries(entryIds: string[], data: Partial<typeof entries.$inferInsert>) {
   await db.update(entries).set(data).where(inArray(entries.id, entryIds));
@@ -123,5 +124,43 @@ export const entryRoutes = new Hono()
   .post("/entries/mark-all-unread", async (c) => {
     const body = await c.req.json<{ feedId?: string }>();
     await bulkUpdateEntries({ isRead: false }, eq(entries.isRead, true), body.feedId);
+    return c.json({ success: true });
+  })
+
+  .post("/entries/:id/retry-summary", async (c) => {
+    const id = c.req.param("id");
+    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    if (!entry) return c.json({ error: "Entry not found" }, 404);
+
+    const [feed] = await db.select().from(feeds).where(eq(feeds.id, entry.feedId));
+
+    await db
+      .update(entries)
+      .set({ summaryStatus: "pending", summary: null, detailedSummary: null })
+      .where(eq(entries.id, id));
+
+    // Fire-and-forget: summarize in background
+    summarizeItems([{ id: entry.id, text: entry.contentText }], feed?.feedType)
+      .then(async (summaries) => {
+        const result = summaries.get(entry.id);
+        if (result) {
+          const isComplete = feed?.feedType === "github-releases" ? !!result.detailedSummary : true;
+          await db
+            .update(entries)
+            .set({
+              summary: result.summary,
+              detailedSummary: result.detailedSummary ?? null,
+              summaryStatus: isComplete ? "completed" : "failed",
+            })
+            .where(eq(entries.id, entry.id));
+        } else {
+          await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, entry.id));
+        }
+      })
+      .catch(async (error) => {
+        console.error("Retry summarization failed:", error);
+        await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, entry.id));
+      });
+
     return c.json({ success: true });
   });
