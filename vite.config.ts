@@ -20,7 +20,7 @@ export default defineConfig({
         command: "vp run dev:db_down && vp run dev:db_up",
         cache: false,
       },
-      "dev:all": {
+      "dev:up": {
         command: "docker compose up -d postgres && vp run server#dev & vp run web#dev",
         cache: false,
       },
