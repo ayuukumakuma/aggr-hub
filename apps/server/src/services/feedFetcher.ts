@@ -55,14 +55,45 @@ async function fetchRssFeed(feed: Feed): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: entries.id, contentText: entries.contentText });
 
+  console.log(`[feedFetcher] inserted ${inserted.length} new entries for feed ${feed.id}`);
+
   if (inserted.length > 0) {
     // Fire-and-forget: summarize in background
-    summarizeItems(inserted.map((e) => ({ id: e.id, text: e.contentText })))
+    summarizeItems(
+      inserted.map((e) => ({ id: e.id, text: e.contentText })),
+      feed.feedType,
+    )
       .then(async (summaries) => {
-        for (const [id, summary] of summaries) {
-          await db.update(entries).set({ summary }).where(eq(entries.id, id));
+        console.log(
+          `[feedFetcher] summarization done: ${summaries.size}/${inserted.length} items got summaries`,
+        );
+        for (const e of inserted) {
+          const result = summaries.get(e.id);
+          if (result) {
+            const isComplete =
+              feed.feedType === "github-releases" ? !!result.detailedSummary : true;
+            console.log(
+              `[feedFetcher] entry ${e.id}: status=${isComplete ? "completed" : "failed"}, summary=${!!result.summary}, detailed=${!!result.detailedSummary}`,
+            );
+            await db
+              .update(entries)
+              .set({
+                summary: result.summary,
+                detailedSummary: result.detailedSummary ?? null,
+                summaryStatus: isComplete ? "completed" : "failed",
+              })
+              .where(eq(entries.id, e.id));
+          } else {
+            console.log(`[feedFetcher] entry ${e.id}: no summary result, marking failed`);
+            await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, e.id));
+          }
         }
       })
-      .catch((error) => console.error("Background summarization failed:", error));
+      .catch(async (error) => {
+        console.error("[feedFetcher] background summarization failed:", error);
+        for (const e of inserted) {
+          await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, e.id));
+        }
+      });
   }
 }
