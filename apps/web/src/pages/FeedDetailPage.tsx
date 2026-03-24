@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from "react-router";
-import { CheckCheck, Circle, RefreshCw, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import { useFeed, useRefreshFeed, useDeleteFeed } from "../hooks/useFeeds.js";
-import { useMarkAllRead, useMarkAllUnread } from "../hooks/useEntries.js";
 import { EntryList } from "../components/entry/EntryList.js";
 import { DropdownMenu } from "../components/ui/DropdownMenu.js";
 
@@ -11,8 +10,6 @@ export function FeedDetailPage() {
   const { data: feed, isLoading } = useFeed(id!);
   const refreshFeed = useRefreshFeed();
   const deleteFeed = useDeleteFeed();
-  const markAllRead = useMarkAllRead();
-  const markAllUnread = useMarkAllUnread();
 
   if (isLoading) {
     return (
@@ -42,18 +39,6 @@ export function FeedDetailPage() {
           <DropdownMenu
             items={[
               {
-                label: "Mark All Read",
-                icon: <CheckCheck size={14} />,
-                onClick: () => markAllRead.mutate(feed.id),
-                disabled: markAllRead.isPending || markAllUnread.isPending,
-              },
-              {
-                label: "Mark All Unread",
-                icon: <Circle size={14} />,
-                onClick: () => markAllUnread.mutate(feed.id),
-                disabled: markAllRead.isPending || markAllUnread.isPending,
-              },
-              {
                 label: "Refresh",
                 icon: (
                   <RefreshCw size={14} className={refreshFeed.isPending ? "animate-spin" : ""} />
@@ -77,7 +62,7 @@ export function FeedDetailPage() {
         </div>
       </div>
 
-      <EntryList feedId={feed.id} feeds={[feed]} />
+      <EntryList feedId={feed.id} feeds={[feed]} hideReadState />
     </div>
   );
 }
