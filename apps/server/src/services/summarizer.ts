@@ -123,6 +123,7 @@ export async function summarizeText(
 export interface SummaryResult {
   summary: string;
   detailedSummary?: string;
+  skipped?: boolean;
 }
 
 export async function summarizeItems(
@@ -157,7 +158,7 @@ export async function summarizeItems(
         console.log(
           `[summarizer] item ${item.id}: text too short (${item.text.length} chars), using original text as summary`,
         );
-        results.set(item.id, { summary: item.text });
+        results.set(item.id, { summary: item.text, skipped: true });
         continue;
       }
 

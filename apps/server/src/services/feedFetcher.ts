@@ -70,17 +70,22 @@ async function fetchRssFeed(feed: Feed): Promise<void> {
         for (const e of inserted) {
           const result = summaries.get(e.id);
           if (result) {
-            const isComplete =
-              feed.feedType === "github-releases" ? !!result.detailedSummary : true;
+            const summaryStatus = result.skipped
+              ? ("skipped" as const)
+              : feed.feedType === "github-releases"
+                ? result.detailedSummary
+                  ? "completed"
+                  : "failed"
+                : "completed";
             console.log(
-              `[feedFetcher] entry ${e.id}: status=${isComplete ? "completed" : "failed"}, summary=${!!result.summary}, detailed=${!!result.detailedSummary}`,
+              `[feedFetcher] entry ${e.id}: status=${summaryStatus}, summary=${!!result.summary}, detailed=${!!result.detailedSummary}`,
             );
             await db
               .update(entries)
               .set({
                 summary: result.summary,
                 detailedSummary: result.detailedSummary ?? null,
-                summaryStatus: isComplete ? "completed" : "failed",
+                summaryStatus,
               })
               .where(eq(entries.id, e.id));
           } else {

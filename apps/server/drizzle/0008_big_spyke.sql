@@ -1,0 +1,1 @@
+ALTER TYPE "public"."summary_status" ADD VALUE 'skipped';

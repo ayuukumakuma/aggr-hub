@@ -10,7 +10,12 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const feedTypeEnum = pgEnum("feed_type", ["rss", "atom", "github-releases"]);
-export const summaryStatusEnum = pgEnum("summary_status", ["pending", "completed", "failed"]);
+export const summaryStatusEnum = pgEnum("summary_status", [
+  "pending",
+  "completed",
+  "failed",
+  "skipped",
+]);
 
 export const feeds = pgTable("feeds", {
   id: uuid("id").defaultRandom().primaryKey(),

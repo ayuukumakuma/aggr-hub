@@ -144,13 +144,19 @@ export const entryRoutes = new Hono()
       .then(async (summaries) => {
         const result = summaries.get(entry.id);
         if (result) {
-          const isComplete = feed?.feedType === "github-releases" ? !!result.detailedSummary : true;
+          const summaryStatus = result.skipped
+            ? ("skipped" as const)
+            : feed?.feedType === "github-releases"
+              ? result.detailedSummary
+                ? "completed"
+                : "failed"
+              : "completed";
           await db
             .update(entries)
             .set({
               summary: result.summary,
               detailedSummary: result.detailedSummary ?? null,
-              summaryStatus: isComplete ? "completed" : "failed",
+              summaryStatus,
             })
             .where(eq(entries.id, entry.id));
         } else {
