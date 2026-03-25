@@ -30,7 +30,7 @@ export default defineConfig({
         cache: false,
       },
       "prod:up": {
-        command: "docker compose up -d",
+        command: "export $(grep -v '^#' apps/server/.env | xargs) && docker compose up -d",
         cache: false,
       },
       "prod:down": {
@@ -38,7 +38,7 @@ export default defineConfig({
         cache: false,
       },
       "prod:restart": {
-        command: "vp run prod:down && vp run prod:up",
+        command: "vp run prod:down && vp run prod:build && vp run prod:up",
         cache: false,
       },
     },
