@@ -10,32 +10,57 @@ type Feed = typeof FeedsTable.$inferSelect;
 export async function fetchAndStoreFeed(feed: Feed): Promise<void> {
   try {
     await fetchRssFeed(feed);
-
-    await db
-      .update(feeds)
-      .set({ lastFetchedAt: new Date(), updatedAt: new Date() })
-      .where(eq(feeds.id, feed.id));
   } catch (error) {
     console.error(`Failed to fetch feed ${feed.url}:`, error);
   }
 }
 
+async function updateFeedTimestamp(
+  feedId: string,
+  cacheHeaders?: { etag?: string; lastModified?: string },
+): Promise<void> {
+  await db
+    .update(feeds)
+    .set({
+      lastFetchedAt: new Date(),
+      updatedAt: new Date(),
+      ...cacheHeaders,
+    })
+    .where(eq(feeds.id, feedId));
+}
+
+function deriveSummaryStatus(
+  result: { skipped?: boolean; detailedSummary?: string | null },
+  feedType: string,
+): "skipped" | "completed" | "failed" {
+  if (result.skipped) return "skipped";
+  if (feedType === "github-releases" && !result.detailedSummary) return "failed";
+  return "completed";
+}
+
 async function fetchRssFeed(feed: Feed): Promise<void> {
-  const parsed = await parseRssFeed(feed.url);
+  const result = await parseRssFeed(feed.url, {
+    etag: feed.lastEtag,
+    lastModified: feed.lastModified,
+  });
+
+  if (result === null) {
+    console.log(`[feedFetcher] feed ${feed.id} not modified (304)`);
+    await updateFeedTimestamp(feed.id);
+    return;
+  }
+
+  const { feed: parsed, etag, lastModified } = result;
+  const cacheHeaders = {
+    lastEtag: etag ?? feed.lastEtag ?? undefined,
+    lastModified: lastModified ?? feed.lastModified ?? undefined,
+  };
 
   const itemsWithGuid = parsed.items.filter((item) => item.guid);
 
-  // Skip OGP fetching for github-releases feeds
   const skipOgp = feed.feedType === "github-releases";
-  const ogpImages = skipOgp
-    ? []
-    : await fetchOgImages(
-        itemsWithGuid.map((item) => ({
-          url: item.imageUrl ? undefined : item.url,
-        })),
-      );
 
-  const rows = itemsWithGuid.map((item, i) => ({
+  const rows = itemsWithGuid.map((item) => ({
     feedId: feed.id,
     title: item.title,
     url: item.url,
@@ -44,61 +69,92 @@ async function fetchRssFeed(feed: Feed): Promise<void> {
     author: item.author,
     publishedAt: item.publishedAt,
     guid: item.guid,
-    ogImageUrl: skipOgp ? undefined : (item.imageUrl ?? ogpImages[i]),
+    ogImageUrl: item.imageUrl,
   }));
 
-  if (rows.length === 0) return;
+  if (rows.length === 0) {
+    await updateFeedTimestamp(feed.id, cacheHeaders);
+    return;
+  }
 
-  const inserted = await db
-    .insert(entries)
-    .values(rows)
-    .onConflictDoNothing()
-    .returning({ id: entries.id, contentText: entries.contentText });
+  const inserted = await db.insert(entries).values(rows).onConflictDoNothing().returning({
+    id: entries.id,
+    url: entries.url,
+    contentText: entries.contentText,
+    ogImageUrl: entries.ogImageUrl,
+  });
 
   console.log(`[feedFetcher] inserted ${inserted.length} new entries for feed ${feed.id}`);
 
+  await updateFeedTimestamp(feed.id, cacheHeaders);
+
+  if (!skipOgp) {
+    updateOgpInBackground(inserted, feed.id);
+  }
+
   if (inserted.length > 0) {
-    // Fire-and-forget: summarize in background
-    summarizeItems(
-      inserted.map((e) => ({ id: e.id, text: e.contentText })),
-      feed.feedType,
-    )
-      .then(async (summaries) => {
-        console.log(
-          `[feedFetcher] summarization done: ${summaries.size}/${inserted.length} items got summaries`,
-        );
-        for (const e of inserted) {
-          const result = summaries.get(e.id);
-          if (result) {
-            const summaryStatus = result.skipped
-              ? ("skipped" as const)
-              : feed.feedType === "github-releases"
-                ? result.detailedSummary
-                  ? "completed"
-                  : "failed"
-                : "completed";
-            console.log(
-              `[feedFetcher] entry ${e.id}: status=${summaryStatus}, summary=${!!result.summary}, detailed=${!!result.detailedSummary}`,
-            );
-            await db
-              .update(entries)
-              .set({
-                summary: result.summary,
-                detailedSummary: result.detailedSummary ?? null,
-                summaryStatus,
-              })
-              .where(eq(entries.id, e.id));
-          } else {
-            console.log(`[feedFetcher] entry ${e.id}: no summary result, marking failed`);
-            await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, e.id));
-          }
+    summarizeInBackground(inserted, feed.feedType);
+  }
+}
+
+type InsertedEntry = {
+  id: string;
+  url: string | null;
+  contentText: string | null;
+  ogImageUrl: string | null;
+};
+
+function updateOgpInBackground(inserted: InsertedEntry[], feedId: string): void {
+  const needsOgp = inserted.filter((e) => !e.ogImageUrl && e.url);
+  if (needsOgp.length === 0) return;
+
+  fetchOgImages(needsOgp.map((e) => ({ url: e.url ?? undefined })))
+    .then(async (images) => {
+      for (let i = 0; i < needsOgp.length; i++) {
+        if (images[i]) {
+          await db
+            .update(entries)
+            .set({ ogImageUrl: images[i] })
+            .where(eq(entries.id, needsOgp[i].id));
         }
-      })
-      .catch(async (error) => {
-        console.error("[feedFetcher] background summarization failed:", error);
-        for (const e of inserted) {
+      }
+      console.log(`[feedFetcher] OGP images updated for feed ${feedId}`);
+    })
+    .catch((error) => {
+      console.error("[feedFetcher] OGP fetch failed:", error);
+    });
+}
+
+function summarizeInBackground(inserted: InsertedEntry[], feedType: Feed["feedType"]): void {
+  summarizeItems(
+    inserted.map((e) => ({ id: e.id, text: e.contentText })),
+    feedType,
+  )
+    .then(async (summaries) => {
+      console.log(
+        `[feedFetcher] summarization done: ${summaries.size}/${inserted.length} items got summaries`,
+      );
+      for (const e of inserted) {
+        const summaryResult = summaries.get(e.id);
+        if (summaryResult) {
+          const summaryStatus = deriveSummaryStatus(summaryResult, feedType);
+          await db
+            .update(entries)
+            .set({
+              summary: summaryResult.summary,
+              detailedSummary: summaryResult.detailedSummary ?? null,
+              summaryStatus,
+            })
+            .where(eq(entries.id, e.id));
+        } else {
           await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, e.id));
         }
-      });
-  }
+      }
+    })
+    .catch(async (error) => {
+      console.error("[feedFetcher] background summarization failed:", error);
+      for (const e of inserted) {
+        await db.update(entries).set({ summaryStatus: "failed" }).where(eq(entries.id, e.id));
+      }
+    });
 }

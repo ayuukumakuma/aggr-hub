@@ -13,8 +13,12 @@ export function FeedForm({ onClose }: FeedFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-    await createFeed.mutateAsync(url.trim());
-    onClose();
+    try {
+      await createFeed.mutateAsync(url.trim());
+      onClose();
+    } catch {
+      // Error is displayed via createFeed.isError
+    }
   };
 
   return (

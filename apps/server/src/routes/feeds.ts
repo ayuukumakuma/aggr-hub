@@ -27,7 +27,7 @@ export const feedRoutes = new Hono()
       })
       .returning();
 
-    await fetchAndStoreFeed(feed);
+    void fetchAndStoreFeed(feed);
 
     return c.json(feed, 201);
   })

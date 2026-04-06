@@ -28,14 +28,15 @@ export async function detectAndParseFeed(url: string): Promise<DetectedFeed> {
   // GitHub Releases shortcut: directly construct the .atom URL
   const githubAtomUrl = tryGitHubReleasesAtomUrl(url);
   if (githubAtomUrl) {
-    const parsed = await parseRssFeed(githubAtomUrl);
-    const repoName = parsed.title?.replace(/^Release notes from /, "");
+    const result = await parseRssFeed(githubAtomUrl);
+    if (!result) throw new Error(`Failed to fetch feed from ${githubAtomUrl}`);
+    const repoName = result.feed.title?.replace(/^Release notes from /, "");
     return {
       feedUrl: githubAtomUrl,
       title: repoName,
-      siteUrl: parsed.siteUrl,
+      siteUrl: result.feed.siteUrl,
       feedType: "github-releases",
-      description: parsed.description,
+      description: result.feed.description,
     };
   }
 
@@ -51,13 +52,14 @@ export async function detectAndParseFeed(url: string): Promise<DetectedFeed> {
     );
     if (linkMatch) {
       const feedUrl = new URL(linkMatch[2], url).toString();
-      const parsed = await parseRssFeed(feedUrl);
+      const result = await parseRssFeed(feedUrl);
+      if (!result) throw new Error(`Failed to fetch feed from ${feedUrl}`);
       return {
         feedUrl,
-        title: parsed.title,
-        siteUrl: parsed.siteUrl,
+        title: result.feed.title,
+        siteUrl: result.feed.siteUrl,
         feedType: linkMatch[1] === "atom" ? "atom" : "rss",
-        description: parsed.description,
+        description: result.feed.description,
       };
     }
     throw new Error(
@@ -66,14 +68,15 @@ export async function detectAndParseFeed(url: string): Promise<DetectedFeed> {
   }
 
   // Assume XML feed
-  const parsed = await parseRssFeed(url);
+  const result = await parseRssFeed(url);
+  if (!result) throw new Error(`Failed to fetch feed from ${url}`);
   const isAtom = body.includes("<feed") && body.includes('xmlns="http://www.w3.org/2005/Atom"');
 
   return {
     feedUrl: url,
-    title: parsed.title,
-    siteUrl: parsed.siteUrl,
+    title: result.feed.title,
+    siteUrl: result.feed.siteUrl,
     feedType: isAtom ? "atom" : "rss",
-    description: parsed.description,
+    description: result.feed.description,
   };
 }

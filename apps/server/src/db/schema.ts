@@ -26,6 +26,8 @@ export const feeds = pgTable("feeds", {
   description: text("description"),
   iconUrl: text("icon_url"),
   lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true }),
+  lastEtag: text("last_etag"),
+  lastModified: text("last_modified"),
   fetchIntervalMinutes: integer("fetch_interval_minutes").notNull().default(60),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
