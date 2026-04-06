@@ -64,6 +64,20 @@
       "when": 1774319352522,
       "tag": "0008_big_spyke",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774485801499,
+      "tag": "0009_workable_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775439899457,
+      "tag": "0010_lumpy_butterfly",
+      "breakpoints": true
     }
   ]
 }

@@ -29,6 +29,7 @@ export const entryRoutes = new Hono()
     const feedId = c.req.query("feedId");
     const isRead = c.req.query("isRead");
     const isFavorite = c.req.query("isFavorite");
+    const isReadLater = c.req.query("isReadLater");
     const cursor = c.req.query("cursor");
     const limit = Math.min(Number(c.req.query("limit") ?? 30), 100);
 
@@ -42,6 +43,9 @@ export const entryRoutes = new Hono()
     }
     if (isFavorite !== undefined && isFavorite !== "") {
       conditions.push(eq(entries.isFavorite, isFavorite === "true"));
+    }
+    if (isReadLater !== undefined && isReadLater !== "") {
+      conditions.push(eq(entries.isReadLater, isReadLater === "true"));
     }
     if (cursor) {
       let publishedAt: string;
@@ -89,7 +93,11 @@ export const entryRoutes = new Hono()
 
   .patch("/entries/:id", async (c) => {
     const id = c.req.param("id");
-    const body = await c.req.json<{ isRead?: boolean; isFavorite?: boolean }>();
+    const body = await c.req.json<{
+      isRead?: boolean;
+      isFavorite?: boolean;
+      isReadLater?: boolean;
+    }>();
 
     const [updated] = await db.update(entries).set(body).where(eq(entries.id, id)).returning();
 
@@ -118,6 +126,12 @@ export const entryRoutes = new Hono()
   .post("/entries/mark-unfavorite", async (c) => {
     const body = await c.req.json<{ entryIds: string[] }>();
     await batchUpdateEntries(body.entryIds, { isFavorite: false });
+    return c.json({ success: true });
+  })
+
+  .post("/entries/mark-unread-later", async (c) => {
+    const body = await c.req.json<{ entryIds: string[] }>();
+    await batchUpdateEntries(body.entryIds, { isReadLater: false });
     return c.json({ success: true });
   })
 

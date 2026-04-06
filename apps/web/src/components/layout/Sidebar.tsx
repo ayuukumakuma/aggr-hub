@@ -1,7 +1,7 @@
 import { NavLink } from "react-router";
-import { List, Home, Bookmark, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { List, Home, Bookmark, Clock, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Feed } from "../../lib/api.js";
-import { FeedTypeIcon, FeedTypeBadge } from "../feed/FeedTypeBadge.js";
+import { FeedTypeIcon } from "../feed/FeedTypeBadge.js";
 
 interface SidebarProps {
   feeds: Feed[];
@@ -21,6 +21,12 @@ const getNavLinkClass =
         : "text-secondary hover:bg-surface-container hover:text-primary"
     }`;
 
+type SidebarGroup = { label: string; types: Feed["feedType"][] };
+const FEED_GROUPS: SidebarGroup[] = [
+  { label: "RSS / Atom", types: ["rss", "atom"] },
+  { label: "GitHub Releases", types: ["github-releases"] },
+];
+
 export function Sidebar({
   feeds,
   isOpen,
@@ -30,6 +36,11 @@ export function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const navLinkClass = getNavLinkClass(collapsed);
+
+  const groupedFeeds = FEED_GROUPS.map((group) => ({
+    ...group,
+    feeds: feeds.filter((f) => group.types.includes(f.feedType)),
+  })).filter((g) => g.feeds.length > 0);
 
   return (
     <>
@@ -83,32 +94,36 @@ export function Sidebar({
             {!collapsed && "Favorites"}
           </NavLink>
 
-          {!collapsed && (
-            <>
-              <div className="h-4" />
+          <NavLink to="/read-later" end className={navLinkClass} onClick={onClose}>
+            <Clock
+              size={18}
+              className={`shrink-0 transition-transform duration-150 [transition-timing-function:linear] ${collapsed ? "scale-125" : "scale-100"}`}
+            />
+            {!collapsed && "Read Later"}
+          </NavLink>
 
-              <div className="px-3 mb-1 text-[10px] font-semibold text-secondary uppercase tracking-widest">
-                Feeds
+          {!collapsed &&
+            groupedFeeds.map((group) => (
+              <div key={group.label}>
+                <div className="h-4" />
+
+                <div className="flex items-center gap-1.5 px-3 mb-1 text-[10px] font-semibold text-secondary uppercase tracking-widest">
+                  <FeedTypeIcon type={group.types[0]} size={10} />
+                  {group.label}
+                </div>
+
+                {group.feeds.map((feed) => (
+                  <NavLink
+                    key={feed.id}
+                    to={`/feeds/${feed.id}`}
+                    className={navLinkClass}
+                    onClick={onClose}
+                  >
+                    <span className="truncate">{feed.title ?? feed.url}</span>
+                  </NavLink>
+                ))}
               </div>
-
-              {feeds.map((feed) => (
-                <NavLink
-                  key={feed.id}
-                  to={`/feeds/${feed.id}`}
-                  className={navLinkClass}
-                  onClick={onClose}
-                >
-                  <span className="shrink-0">
-                    <FeedTypeIcon type={feed.feedType} size={14} />
-                  </span>
-                  <span className="truncate">{feed.title ?? feed.url}</span>
-                  <span className="ml-auto">
-                    <FeedTypeBadge type={feed.feedType} />
-                  </span>
-                </NavLink>
-              ))}
-            </>
-          )}
+            ))}
         </nav>
 
         <div className={`hidden lg:flex p-2 ${collapsed ? "justify-center" : "justify-end"}`}>

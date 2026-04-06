@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
-import { BookmarkX, CircleCheck, CircleDashed, Inbox, Loader2, X } from "lucide-react";
+import { BookmarkX, CircleCheck, CircleDashed, Clock, Inbox, Loader2, X } from "lucide-react";
 import { EntryCard } from "./EntryCard.js";
 import {
   useEntries,
   useMarkRead,
   useMarkUnread,
   useMarkUnfavorite,
+  useMarkUnreadLater,
 } from "../../hooks/useEntries.js";
 import { useIntersectionObserver } from "../../hooks/useIntersectionObserver.js";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
@@ -15,6 +16,7 @@ interface EntryListProps {
   feedId?: string;
   isRead?: string;
   isFavorite?: string;
+  isReadLater?: string;
   feeds?: Feed[];
   groupByDate?: boolean;
   hideReadState?: boolean;
@@ -82,6 +84,7 @@ export function EntryList({
   feedId,
   isRead,
   isFavorite,
+  isReadLater,
   feeds,
   groupByDate,
   hideReadState,
@@ -90,10 +93,12 @@ export function EntryList({
     feedId,
     isRead,
     isFavorite,
+    isReadLater,
   });
   const markRead = useMarkRead();
   const markUnread = useMarkUnread();
   const markUnfavorite = useMarkUnfavorite();
+  const markUnreadLater = useMarkUnreadLater();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const hasSelection = selectedIds.size > 0;
@@ -170,7 +175,11 @@ export function EntryList({
     );
   }
 
-  const isPending = markRead.isPending || markUnread.isPending || markUnfavorite.isPending;
+  const isPending =
+    markRead.isPending ||
+    markUnread.isPending ||
+    markUnfavorite.isPending ||
+    markUnreadLater.isPending;
 
   const barBtnClass =
     "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg hover:bg-on-primary hover:text-primary disabled:opacity-40 transition-colors duration-150 [transition-timing-function:linear]";
@@ -179,7 +188,17 @@ export function EntryList({
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary outline outline-2 outline-primary rounded-xl">
       <span className="text-sm font-mono">{selectedIds.size} selected</span>
       <div className="w-px h-5 bg-on-primary/30" />
-      {hideReadState ? (
+      {isReadLater && (
+        <button
+          onClick={() => handleBulkAction(markUnreadLater.mutate)}
+          disabled={isPending}
+          className={barBtnClass}
+        >
+          <Clock size={14} />
+          Remove
+        </button>
+      )}
+      {!isReadLater && hideReadState && (
         <button
           onClick={() => handleBulkAction(markUnfavorite.mutate)}
           disabled={isPending}
@@ -188,7 +207,8 @@ export function EntryList({
           <BookmarkX size={14} />
           Unfavorite
         </button>
-      ) : (
+      )}
+      {!isReadLater && !hideReadState && (
         <>
           <button
             onClick={() => handleBulkAction(markRead.mutate)}

@@ -7,10 +7,16 @@ import {
   Square,
   Bookmark,
   BookmarkCheck,
+  Clock,
   RotateCcw,
 } from "lucide-react";
 import type { Entry, Feed } from "../../lib/api.js";
-import { useToggleRead, useToggleFavorite, useRetrySummary } from "../../hooks/useEntries.js";
+import {
+  useToggleRead,
+  useToggleFavorite,
+  useToggleReadLater,
+  useRetrySummary,
+} from "../../hooks/useEntries.js";
 import { formatDistanceToNow } from "date-fns";
 import Markdown from "react-markdown";
 
@@ -37,6 +43,7 @@ export function EntryCard({
 }: EntryCardProps) {
   const toggleRead = useToggleRead();
   const toggleFavorite = useToggleFavorite();
+  const toggleReadLater = useToggleReadLater();
   const retrySummary = useRetrySummary();
   const [imgError, setImgError] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -115,6 +122,17 @@ export function EntryCard({
           >
             {entry.isFavorite ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
             {entry.isFavorite ? "Unfavorite" : "Favorite"}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleReadLater.mutate({ id: entry.id, isReadLater: !entry.isReadLater });
+            }}
+            className={`${actionBtnClass} ${hideReadState ? "group-hover:[animation-delay:120ms]" : "group-hover:[animation-delay:180ms]"}`}
+            title={entry.isReadLater ? "Remove from Read Later" : "Read Later"}
+          >
+            <Clock size={18} />
+            {entry.isReadLater ? "Remove" : "Read Later"}
           </button>
         </div>
       )}

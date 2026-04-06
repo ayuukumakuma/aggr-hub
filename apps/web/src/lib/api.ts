@@ -44,6 +44,7 @@ export interface Entry {
   publishedAt: string | null;
   isRead: boolean;
   isFavorite: boolean;
+  isReadLater: boolean;
   guid: string;
   ogImageUrl: string | null;
   summary: string | null;
@@ -84,6 +85,7 @@ export const api = {
       feedId?: string;
       isRead?: string;
       isFavorite?: string;
+      isReadLater?: string;
       cursor?: string;
       limit?: number;
     }) => {
@@ -91,13 +93,14 @@ export const api = {
       if (params?.feedId) searchParams.set("feedId", params.feedId);
       if (params?.isRead !== undefined) searchParams.set("isRead", params.isRead);
       if (params?.isFavorite !== undefined) searchParams.set("isFavorite", params.isFavorite);
+      if (params?.isReadLater !== undefined) searchParams.set("isReadLater", params.isReadLater);
       if (params?.cursor) searchParams.set("cursor", params.cursor);
       if (params?.limit) searchParams.set("limit", String(params.limit));
       const query = searchParams.toString();
       return request<PaginatedEntries>(`/entries${query ? `?${query}` : ""}`);
     },
     get: (id: string) => request<Entry>(`/entries/${id}`),
-    update: (id: string, data: { isRead?: boolean; isFavorite?: boolean }) =>
+    update: (id: string, data: { isRead?: boolean; isFavorite?: boolean; isReadLater?: boolean }) =>
       request<Entry>(`/entries/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -124,6 +127,11 @@ export const api = {
       }),
     markUnfavorite: (entryIds: string[]) =>
       request<{ success: boolean }>("/entries/mark-unfavorite", {
+        method: "POST",
+        body: JSON.stringify({ entryIds }),
+      }),
+    markUnreadLater: (entryIds: string[]) =>
+      request<{ success: boolean }>("/entries/mark-unread-later", {
         method: "POST",
         body: JSON.stringify({ entryIds }),
       }),

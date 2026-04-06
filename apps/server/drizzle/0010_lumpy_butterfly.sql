@@ -1,0 +1,1 @@
+ALTER TABLE "entries" ADD COLUMN "is_read_later" boolean DEFAULT false NOT NULL;

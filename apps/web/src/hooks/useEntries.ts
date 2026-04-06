@@ -1,7 +1,12 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 
-export function useEntries(params?: { feedId?: string; isRead?: string; isFavorite?: string }) {
+export function useEntries(params?: {
+  feedId?: string;
+  isRead?: string;
+  isFavorite?: string;
+  isReadLater?: string;
+}) {
   return useInfiniteQuery({
     queryKey: ["entries", params],
     queryFn: ({ pageParam }) => api.entries.list({ ...params, cursor: pageParam }),
@@ -58,6 +63,16 @@ export function useMarkUnread() {
 
 export function useMarkUnfavorite() {
   return useEntryMutation((entryIds: string[]) => api.entries.markUnfavorite(entryIds));
+}
+
+export function useToggleReadLater() {
+  return useEntryMutation(({ id, isReadLater }: { id: string; isReadLater: boolean }) =>
+    api.entries.update(id, { isReadLater }),
+  );
+}
+
+export function useMarkUnreadLater() {
+  return useEntryMutation((entryIds: string[]) => api.entries.markUnreadLater(entryIds));
 }
 
 export function useMarkAllUnread() {
