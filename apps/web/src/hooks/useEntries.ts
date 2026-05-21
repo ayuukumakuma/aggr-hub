@@ -1,5 +1,13 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
+import type { Entry, PaginatedEntries } from "../lib/api.js";
+
+type EntriesData = {
+  pages: PaginatedEntries[];
+  pageParams: unknown[];
+};
+
+type EntryPatch = Pick<Entry, "id"> & Partial<Pick<Entry, "isRead" | "isFavorite" | "isReadLater">>;
 
 export function useEntries(params?: {
   feedId?: string;
@@ -37,16 +45,51 @@ function useEntryMutation<TInput>(mutationFn: (input: TInput) => Promise<unknown
   });
 }
 
+export function updateEntryPages<T>(
+  data: T,
+  entryId: string,
+  patch: Partial<Pick<Entry, "isRead" | "isFavorite" | "isReadLater">>,
+): T {
+  if (!isEntriesData(data)) return data;
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      data: page.data.map((entry) => (entry.id === entryId ? { ...entry, ...patch } : entry)),
+    })),
+  } as T;
+}
+
+function isEntriesData(data: unknown): data is EntriesData {
+  return typeof data === "object" && data !== null && Array.isArray((data as EntriesData).pages);
+}
+
+function useEntryPatchMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...patch }: EntryPatch) => api.entries.update(id, patch),
+    onMutate: async ({ id, ...patch }) => {
+      await qc.cancelQueries({ queryKey: ["entries"] });
+      const previous = qc.getQueriesData({ queryKey: ["entries"] });
+      qc.setQueriesData({ queryKey: ["entries"] }, (data) => updateEntryPages(data, id, patch));
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      for (const [queryKey, data] of context?.previous ?? []) {
+        qc.setQueryData(queryKey, data);
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["entries"] }),
+  });
+}
+
 export function useToggleFavorite() {
-  return useEntryMutation(({ id, isFavorite }: { id: string; isFavorite: boolean }) =>
-    api.entries.update(id, { isFavorite }),
-  );
+  return useEntryPatchMutation();
 }
 
 export function useToggleRead() {
-  return useEntryMutation(({ id, isRead }: { id: string; isRead: boolean }) =>
-    api.entries.update(id, { isRead }),
-  );
+  return useEntryPatchMutation();
 }
 
 export function useMarkRead() {
@@ -66,9 +109,7 @@ export function useMarkUnfavorite() {
 }
 
 export function useToggleReadLater() {
-  return useEntryMutation(({ id, isReadLater }: { id: string; isReadLater: boolean }) =>
-    api.entries.update(id, { isReadLater }),
-  );
+  return useEntryPatchMutation();
 }
 
 export function useMarkUnreadLater() {
